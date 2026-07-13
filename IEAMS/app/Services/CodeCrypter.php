@@ -137,11 +137,8 @@ class CodeCrypter
                     $filename = $file->getFilename();
                     $pathname = $file->getPathname();
                     
-                    // Exclusions to prevent lockout or bootstrap issues
-                    if ($filename === 'SystemLockController.php') continue;
-                    if ($filename === 'CodeCrypter.php') continue;
+                    // Exclusions to prevent early bootstrap issues
                     if ($filename === 'AppServiceProvider.php') continue;
-                    if (str_contains($pathname, 'app' . DIRECTORY_SEPARATOR . 'Http' . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'Auth')) continue;
                     
                     $files[] = $file->getRealPath();
                 }
