@@ -23,7 +23,12 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Database\Connection::resolverFor('sqlite', function ($connection, $database, $prefix, $config) {
             $conn = new \Illuminate\Database\SQLiteConnection($connection, $database, $prefix, $config);
             
-            $grammar = new class extends \Illuminate\Database\Schema\Grammars\SQLiteGrammar {
+            $grammar = new class($conn) extends \Illuminate\Database\Schema\Grammars\SQLiteGrammar {
+                public function __construct(\Illuminate\Database\Connection $connection)
+                {
+                    parent::__construct($connection);
+                }
+
                 public function compileTableInfo($table)
                 {
                     return sprintf(
