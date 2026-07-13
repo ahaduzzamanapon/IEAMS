@@ -81,19 +81,32 @@
 
             <div class="space-y-4 pt-2">
                 <div class="space-y-2">
-                    <label for="shield_key" class="text-xs font-semibold text-slate-400">Security Encryption Key / Passphrase</label>
-                    <input type="password" id="shield_key" name="shield_key" placeholder="Enter any custom passphrase to Lock, or the EXACT same passphrase to Unlock" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm" required>
+                    <label for="shield_key" class="text-xs font-semibold text-slate-400">
+                        @if($status['status'] === 'Encrypted')
+                            Security Decryption Key / Passphrase
+                        @else
+                            Security Encryption Key / Passphrase
+                        @endif
+                    </label>
+                    <input type="password" id="shield_key" name="shield_key" placeholder="{{ $status['status'] === 'Encrypted' ? 'Enter the passphrase to Unlock' : 'Enter any custom passphrase to Lock' }}" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm" required>
                 </div>
+
+                @if($status['status'] !== 'Encrypted')
+                    <div class="space-y-2">
+                        <label for="shield_key_confirm" class="text-xs font-semibold text-slate-400">Confirm Encryption Key / Passphrase</label>
+                        <input type="password" id="shield_key_confirm" name="shield_key_confirm" placeholder="Confirm your custom passphrase" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm" required>
+                    </div>
+                @endif
 
                 <div class="flex flex-col sm:flex-row gap-4 pt-2">
                     @if($status['status'] !== 'Encrypted')
-                        <button type="button" onclick="submitLockForm('{{ route('system.lock.encrypt') }}', 'WARNING: This will encrypt/obfuscate all controllers and models files on the server disk. The application will continue to run normally but the source code files will not be readable. Proceed?')" class="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-rose-900/20 cursor-pointer">
+                        <button type="button" onclick="submitLockForm('{{ route('system.lock.encrypt') }}', 'WARNING: This will encrypt/obfuscate all controllers and models files on the server disk. The application will continue to run normally but the source code files will not be readable. Proceed?', true)" class="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-rose-900/20 cursor-pointer">
                             🔒 Lock / Encrypt Code
                         </button>
                     @endif
 
                     @if($status['status'] !== 'Decrypted')
-                        <button type="button" onclick="submitLockForm('{{ route('system.lock.decrypt') }}', 'This will restore all encrypted controllers and models back to original clean PHP source code. Proceed?')" class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/20 cursor-pointer">
+                        <button type="button" onclick="submitLockForm('{{ route('system.lock.decrypt') }}', 'This will restore all encrypted controllers and models back to original clean PHP source code. Proceed?', false)" class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/20 cursor-pointer">
                             🔓 Refresh / Decrypt Code
                         </button>
                     @endif
@@ -104,15 +117,30 @@
             <form id="lockForm" method="POST" style="display: none;">
                 @csrf
                 <input type="hidden" id="form_shield_key" name="shield_key">
+                <input type="hidden" id="form_shield_key_confirmation" name="shield_key_confirmation">
             </form>
 
             <script>
-                function submitLockForm(actionUrl, confirmMessage) {
+                function submitLockForm(actionUrl, confirmMessage, isEncrypting) {
                     const keyVal = document.getElementById('shield_key').value.trim();
                     if (!keyVal) {
-                        alert('Please enter your Security Encryption Key!');
+                        alert('Please enter your Passphrase Key!');
                         document.getElementById('shield_key').focus();
                         return;
+                    }
+                    if (isEncrypting) {
+                        const confirmVal = document.getElementById('shield_key_confirm').value.trim();
+                        if (!confirmVal) {
+                            alert('Please confirm your Passphrase Key!');
+                            document.getElementById('shield_key_confirm').focus();
+                            return;
+                        }
+                        if (keyVal !== confirmVal) {
+                            alert('Passphrase Keys do not match! Please verify both fields.');
+                            document.getElementById('shield_key_confirm').focus();
+                            return;
+                        }
+                        document.getElementById('form_shield_key_confirmation').value = confirmVal;
                     }
                     if (confirm(confirmMessage)) {
                         const form = document.getElementById('lockForm');

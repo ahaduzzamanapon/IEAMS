@@ -1,7 +1,3 @@
 <?php
-namespace App\Http\Controllers;
-
-abstract class Controller
-{
-    //
-}
+/* ENCRYPTED BY IEAMS SHIELD */
+eval(hex2bin('6e616d657370616365204170705c487474705c436f6e74726f6c6c6572733b0a0a616273747261637420636c61737320436f6e74726f6c6c65720a7b0a202020202f2f0a7d0a'));
