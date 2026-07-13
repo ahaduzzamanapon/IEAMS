@@ -356,7 +356,7 @@
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nOMdBmdd8ODcPLyFNVYDFQTgyONcIMLYptYDAc5A5cLD1dL3FIEy1KxyyGwjSSliuf80cRQ9obfA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         @if($asset->asset_type !== 'consumer')
