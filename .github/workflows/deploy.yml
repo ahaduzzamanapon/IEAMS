@@ -92,3 +92,6 @@ jobs:
             **/*.log
             **/Thumbs.db
             **/.DS_Store
+            **/bootstrap/cache/config.php
+            **/bootstrap/cache/routes-v7.php
+
