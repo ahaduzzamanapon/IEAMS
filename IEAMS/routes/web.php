@@ -197,7 +197,15 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // System Optimization & Cache Clear
-    Route::any('/clear-cache', function () {
+    Route::post('/clear-cache', function () {
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('optimize');
+        return back()->with('success', 'Application optimized and all caches cleared successfully!');
+    })->name('system.clear-cache');
+    Route::get('/clear-cache', function () {
         \Illuminate\Support\Facades\Artisan::call('config:clear');
         \Illuminate\Support\Facades\Artisan::call('route:clear');
         \Illuminate\Support\Facades\Artisan::call('view:clear');
