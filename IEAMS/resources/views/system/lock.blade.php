@@ -15,6 +15,16 @@
             {{ session('success') }}
         </div>
     @endif
+    @if(session('error'))
+        <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
+            {{ session('error') }}
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
+            {{ $errors->first() }}
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         
@@ -48,25 +58,49 @@
                 You can toggle the source code state of all core controllers and models. When locked, files on the server are compiled to hex strings inside <code>eval()</code> wrappers, rendering them unreadable to FTP/SSH viewers, while the application runs fully normally.
             </p>
 
-            <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                @if($status['status'] !== 'Encrypted')
-                    <form action="{{ route('system.lock.encrypt') }}" method="POST" onsubmit="return confirm('WARNING: This will encrypt/obfuscate all controllers and models files on the server disk. The application will continue to run normally but the source code files will not be readable. Proceed?')">
-                        @csrf
-                        <button type="submit" class="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-rose-900/20 cursor-pointer">
+            <div class="space-y-4 pt-2">
+                <div class="space-y-2">
+                    <label for="shield_key" class="text-xs font-semibold text-slate-400">Security Encryption Key / Passphrase</label>
+                    <input type="password" id="shield_key" name="shield_key" placeholder="Enter security passphrase (Default: NHA-Shield-2026)" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm" required>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 pt-2">
+                    @if($status['status'] !== 'Encrypted')
+                        <button type="button" onclick="submitLockForm('{{ route('system.lock.encrypt') }}', 'WARNING: This will encrypt/obfuscate all controllers and models files on the server disk. The application will continue to run normally but the source code files will not be readable. Proceed?')" class="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-rose-900/20 cursor-pointer">
                             🔒 Lock / Encrypt Code
                         </button>
-                    </form>
-                @endif
+                    @endif
 
-                @if($status['status'] !== 'Decrypted')
-                    <form action="{{ route('system.lock.decrypt') }}" method="POST" onsubmit="return confirm('This will restore all encrypted controllers and models back to original clean PHP source code. Proceed?')">
-                        @csrf
-                        <button type="submit" class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/20 cursor-pointer">
+                    @if($status['status'] !== 'Decrypted')
+                        <button type="button" onclick="submitLockForm('{{ route('system.lock.decrypt') }}', 'This will restore all encrypted controllers and models back to original clean PHP source code. Proceed?')" class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/20 cursor-pointer">
                             🔓 Refresh / Decrypt Code
                         </button>
-                    </form>
-                @endif
+                    @endif
+                </div>
             </div>
+
+            <!-- Hidden Helper Form -->
+            <form id="lockForm" method="POST" style="display: none;">
+                @csrf
+                <input type="hidden" id="form_shield_key" name="shield_key">
+            </form>
+
+            <script>
+                function submitLockForm(actionUrl, confirmMessage) {
+                    const keyVal = document.getElementById('shield_key').value.trim();
+                    if (!keyVal) {
+                        alert('Please enter your Security Encryption Key!');
+                        document.getElementById('shield_key').focus();
+                        return;
+                    }
+                    if (confirm(confirmMessage)) {
+                        const form = document.getElementById('lockForm');
+                        form.action = actionUrl;
+                        document.getElementById('form_shield_key').value = keyVal;
+                        form.submit();
+                    }
+                }
+            </script>
         </div>
 
     </div>

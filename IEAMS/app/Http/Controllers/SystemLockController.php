@@ -19,8 +19,16 @@ class SystemLockController extends Controller
     /**
      * Encrypt all target controllers and models
      */
-    public function encrypt()
+    public function encrypt(Request $request)
     {
+        $request->validate([
+            'shield_key' => 'required|string',
+        ]);
+
+        if (!CodeCrypter::verifyKey($request->input('shield_key'))) {
+            return redirect()->route('system.lock')->with('error', 'Unauthorized: Invalid Security Encryption Key!');
+        }
+
         $files = CodeCrypter::getTargetFiles();
         $count = 0;
         foreach ($files as $file) {
@@ -35,8 +43,16 @@ class SystemLockController extends Controller
     /**
      * Decrypt/Restore all target controllers and models
      */
-    public function decrypt()
+    public function decrypt(Request $request)
     {
+        $request->validate([
+            'shield_key' => 'required|string',
+        ]);
+
+        if (!CodeCrypter::verifyKey($request->input('shield_key'))) {
+            return redirect()->route('system.lock')->with('error', 'Unauthorized: Invalid Security Encryption Key!');
+        }
+
         $files = CodeCrypter::getTargetFiles();
         $count = 0;
         foreach ($files as $file) {

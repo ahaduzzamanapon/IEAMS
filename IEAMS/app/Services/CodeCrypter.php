@@ -52,6 +52,15 @@ class CodeCrypter
     }
 
     /**
+     * Verify the entered security encryption key against bcrypt hash
+     */
+    public static function verifyKey($key)
+    {
+        $hash = env('SHIELD_KEY_HASH', '$2y$10$Ek4QwiimVRcNazx/hhriqOVoZNBL07gk6VyilnVV8suUWqz9LsiDW');
+        return password_verify($key, $hash);
+    }
+
+    /**
      * Get status of files (how many are encrypted out of total)
      */
     public static function getStatus()
