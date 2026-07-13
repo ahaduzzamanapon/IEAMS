@@ -360,16 +360,25 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         @if($asset->asset_type !== 'consumer')
-            const qrText = `{{ route('assets.show', $asset->id) }}
-Asset ID: {{ $asset->unique_asset_id }}
+            const qrText = `Asset ID: {{ $asset->unique_asset_id }}
+Type: {{ ucfirst($asset->asset_type) }}
 Category: {{ $asset->category->name }}
-Brand/Model: {{ $asset->brand }} {{ $asset->model }}
-Serial: {{ $asset->serial_number }}`;
+Sub-Category: {{ $asset->subCategory->name }}
+Brand: {{ $asset->brand }}
+Model: {{ $asset->model }}
+Serial Number: {{ $asset->serial_number }}
+Purchase Cost: ৳{{ number_format($asset->purchase_cost, 2) }}
+Capitalized Cost: ৳{{ number_format($asset->capitalized_cost, 2) }}
+Total Cost: ৳{{ number_format($asset->total_cost, 2) }}
+PO Number: {{ $asset->purchase_order_number ?? 'N/A' }}
+Invoice: {{ $asset->invoice_number ?? 'N/A' }}
+Vendor: {{ $asset->vendor ? $asset->vendor->name : 'N/A' }}
+Warranty: {{ $asset->warranty_applicable ? 'Yes (Expires: ' . \Carbon\Carbon::parse($asset->warranty_end_date)->format('d-m-Y') . ')' : 'No' }}`;
 
             new QRCode(document.getElementById("qrcode"), {
                 text: qrText,
-                width: 100,
-                height: 100,
+                width: 110,
+                height: 110,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.L
