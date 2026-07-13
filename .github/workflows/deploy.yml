@@ -10,6 +10,10 @@ jobs:
   deploy:
     name: Build & Deploy via FTP
     runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./IEAMS
 
     steps:
       # 1. Checkout source code
@@ -28,8 +32,8 @@ jobs:
       - name: Cache Composer Packages
         uses: actions/cache@v4
         with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          path: IEAMS/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('IEAMS/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
 
@@ -43,6 +47,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: IEAMS/package-lock.json
 
       # 6. Install Node.js packages
       - name: Install NPM Dependencies
@@ -83,6 +88,7 @@ jobs:
           chmod -R 775 storage bootstrap/cache
 
       # 11. Deploy via FTP (credentials from GitHub Secrets ONLY)
+      # local-dir points to the built project directory
       - name: Deploy to Production Server via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -91,7 +97,7 @@ jobs:
           password: ${{ secrets.FTP_PASS }}
           port: 21
           protocol: ftp
-          local-dir: ./
+          local-dir: ./IEAMS/
           server-dir: ${{ secrets.FTP_SERVER_DIR }}
           exclude: |
             **/.git*
@@ -106,10 +112,3 @@ jobs:
             **/*.log
             **/Thumbs.db
             **/.DS_Store
-
-      # 12. Run Database Migrations on remote (via SSH if available, else skip)
-      - name: Notify Deployment Success
-        if: success()
-        run: |
-          echo "✅ IEAMS deployed successfully to ${{ secrets.FTP_HOST }}"
-          echo "🕐 Deployed at: $(date)"
