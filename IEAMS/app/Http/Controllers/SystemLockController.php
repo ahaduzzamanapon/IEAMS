@@ -22,12 +22,15 @@ class SystemLockController extends Controller
     public function encrypt(Request $request)
     {
         $request->validate([
-            'shield_key' => 'required|string',
+            'shield_key' => 'required|string|min:4',
         ]);
 
-        if (!CodeCrypter::verifyKey($request->input('shield_key'))) {
-            return redirect()->route('system.lock')->with('error', 'Unauthorized: Invalid Security Encryption Key!');
+        if (CodeCrypter::hasStoredKey()) {
+            return redirect()->route('system.lock')->with('error', 'System is already locked and encrypted!');
         }
+
+        // Save the key hash first
+        CodeCrypter::saveKeyHash($request->input('shield_key'));
 
         $files = CodeCrypter::getTargetFiles();
         $count = 0;
@@ -44,7 +47,7 @@ class SystemLockController extends Controller
         }
 
         return redirect()->route('system.lock')
-            ->with('success', "Successfully encrypted {$count} PHP source files!")
+            ->with('success', "Successfully encrypted {$count} PHP source files with your custom key!")
             ->with('logs', $logs);
     }
 
@@ -57,8 +60,12 @@ class SystemLockController extends Controller
             'shield_key' => 'required|string',
         ]);
 
+        if (!CodeCrypter::hasStoredKey()) {
+            return redirect()->route('system.lock')->with('error', 'System is not locked/encrypted!');
+        }
+
         if (!CodeCrypter::verifyKey($request->input('shield_key'))) {
-            return redirect()->route('system.lock')->with('error', 'Unauthorized: Invalid Security Encryption Key!');
+            return redirect()->route('system.lock')->with('error', 'Unauthorized: Invalid Security Decryption Key!');
         }
 
         $files = CodeCrypter::getTargetFiles();
@@ -74,6 +81,9 @@ class SystemLockController extends Controller
                 $logs[] = "Skipped (Already decrypted): {$relativePath}";
             }
         }
+
+        // Clean up the stored key hash upon successful decryption
+        CodeCrypter::deleteKeyHash();
 
         return redirect()->route('system.lock')
             ->with('success', "Successfully decrypted and refreshed {$count} PHP source files!")

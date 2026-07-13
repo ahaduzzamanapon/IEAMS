@@ -82,7 +82,7 @@
             <div class="space-y-4 pt-2">
                 <div class="space-y-2">
                     <label for="shield_key" class="text-xs font-semibold text-slate-400">Security Encryption Key / Passphrase</label>
-                    <input type="password" id="shield_key" name="shield_key" placeholder="Enter security passphrase (Default: NHA-Shield-2026)" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm" required>
+                    <input type="password" id="shield_key" name="shield_key" placeholder="Enter any custom passphrase to Lock, or the EXACT same passphrase to Unlock" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm" required>
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-4 pt-2">
@@ -132,8 +132,9 @@
             ⚠️ IMPORTANT OPERATIONAL NOTICE
         </h4>
         <ul class="list-disc list-inside text-xs text-slate-300 space-y-2 leading-relaxed">
+            <li><strong>Dynamic Passphrase Lock:</strong> You can choose and enter any custom key to encrypt/lock the system. However, you must provide that exact same key to decrypt and restore the source files back to normal.</li>
             <li><strong>Zero Extensions Required:</strong> This utility uses standard PHP native hex execution wrappers (<code>eval(hex2bin(...))</code>), meaning it works instantly on any basic shared hosting server.</li>
-            <li><strong>Safe Areas:</strong> The SystemLockController and standard Authentication controllers are automatically skipped from encryption to guarantee you can always log back in and unlock the source code anytime.</li>
+            <li><strong>Safe Areas:</strong> The SystemLockController, CodeCrypter service, AppServiceProvider, and standard Authentication controllers are automatically skipped from encryption to guarantee you can always log back in and unlock the source code anytime.</li>
             <li><strong>Git Workflows:</strong> Ensure you run <strong>Decrypt / Refresh</strong> before modifying any code locally or pushing to Git, to avoid committing encrypted files into your version history.</li>
         </ul>
     </div>

@@ -52,12 +52,48 @@ class CodeCrypter
     }
 
     /**
-     * Verify the entered security encryption key against bcrypt hash
+     * Check if a shield key hash is currently stored (system is encrypted)
+     */
+    public static function hasStoredKey()
+    {
+        return file_exists(storage_path('app/.shield_hash'));
+    }
+
+    /**
+     * Verify the entered security encryption key
      */
     public static function verifyKey($key)
     {
-        $hash = env('SHIELD_KEY_HASH', '$2y$10$Ek4QwiimVRcNazx/hhriqOVoZNBL07gk6VyilnVV8suUWqz9LsiDW');
-        return password_verify($key, $hash);
+        $hashPath = storage_path('app/.shield_hash');
+        if (!file_exists($hashPath)) {
+            // If no key is stored, any key is valid (used for initial encryption)
+            return true;
+        }
+
+        $hash = file_get_contents($hashPath);
+        return password_verify($key, trim($hash));
+    }
+
+    /**
+     * Save the bcrypt hash of the current encryption key
+     */
+    public static function saveKeyHash($key)
+    {
+        $hashPath = storage_path('app/.shield_hash');
+        $hash = password_hash($key, PASSWORD_BCRYPT);
+        return file_put_contents($hashPath, $hash) !== false;
+    }
+
+    /**
+     * Delete the stored key hash upon successful decryption
+     */
+    public static function deleteKeyHash()
+    {
+        $hashPath = storage_path('app/.shield_hash');
+        if (file_exists($hashPath)) {
+            return unlink($hashPath);
+        }
+        return true;
     }
 
     /**
