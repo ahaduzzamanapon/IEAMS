@@ -117,6 +117,50 @@
                     <input type="date" name="fitness_expiry_date" required class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
                 </div>
             </div>
+
+            <!-- Tax Token -->
+            <div>
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Tax Token Details</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Tax Token Number</label>
+                        <input type="text" name="tax_token_number" placeholder="TXT-XXXXXX" class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Tax Token Issue Date</label>
+                        <input type="date" name="tax_token_issue_date" class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Tax Token Expiry Date</label>
+                        <input type="date" name="tax_token_expiry_date" class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Insurance Details -->
+        <div class="p-6 rounded-2xl bg-[#0E1325]/80 border border-slate-800/80 space-y-6">
+            <h3 class="text-lg font-bold text-white border-b border-slate-850 pb-2">3. Insurance Details</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Insurance Policy Number</label>
+                    <input type="text" name="insurance_number" placeholder="INS-XXXXXX" class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Insurance Company</label>
+                    <input type="text" name="insurance_company" placeholder="e.g. Sadharan Bima Corp" class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Insurance Issue Date</label>
+                    <input type="date" name="insurance_issue_date" class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Insurance Expiry Date</label>
+                    <input type="date" name="insurance_expiry_date" class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+                </div>
+            </div>
         </div>
 
         <!-- Submit Buttons -->

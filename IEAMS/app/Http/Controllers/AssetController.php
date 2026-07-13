@@ -121,8 +121,12 @@ class AssetController extends Controller
             ->where('status', 'active')
             ->firstOrFail();
 
+        $minDate = $assignment->assigned_date instanceof \Carbon\Carbon
+            ? $assignment->assigned_date->format('Y-m-d')
+            : (string) $assignment->assigned_date;
+
         $request->validate([
-            'actual_return_date' => 'required|date|after_or_equal:assigned_date',
+            'actual_return_date' => 'required|date|after_or_equal:' . $minDate,
         ]);
 
         try {

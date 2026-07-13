@@ -35,4 +35,12 @@ class DesignationController extends Controller
 
         return redirect()->route('designations.index')->with('success', 'Designation deleted successfully.');
     }
+
+    public function getDesignationsByDepartment($departmentId)
+    {
+        // Returns all designations (global, not department-scoped in current schema)
+        // If future schema adds department_id to designations, filter here
+        $designations = Designation::orderBy('name')->get(['id', 'name', 'code']);
+        return response()->json($designations);
+    }
 }

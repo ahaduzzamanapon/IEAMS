@@ -9,12 +9,14 @@ class Rent extends Model
 {
     protected $fillable = [
         'apartment_id', 'tenant_name', 'nid', 'mobile', 'address', 'occupation',
-        'rent_start_date', 'rent_end_date', 'monthly_rent', 'advance_amount', 'security_deposit', 'agreement_number'
+        'rent_start_date', 'rent_end_date', 'monthly_rent', 'advance_amount', 'security_deposit',
+        'agreement_number', 'status', 'terminated_at', 'termination_reason'
     ];
 
     protected $casts = [
         'rent_start_date' => 'date',
         'rent_end_date' => 'date',
+        'terminated_at' => 'date',
         'monthly_rent' => 'decimal:2',
         'advance_amount' => 'decimal:2',
         'security_deposit' => 'decimal:2',

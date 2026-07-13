@@ -5,6 +5,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IEAMS - Integrated Estate & Asset Management System</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -119,7 +120,7 @@
             </a>
 
             <div class="pt-4 pb-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Setup Settings</div>
-            <details class="group [&_summary::-webkit-details-marker]:hidden" {{ request()->routeIs('categories.*', 'vendors.*', 'offices.*', 'branches.*', 'vehicles.drivers', 'divisions.*', 'districts.*', 'upazilas.*') ? 'open' : '' }}>
+            <details class="group [&_summary::-webkit-details-marker]:hidden" {{ request()->routeIs('categories.*', 'vendors.*', 'offices.*', 'branches.*', 'vehicles.drivers', 'divisions.*', 'districts.*', 'upazilas.*', 'departments.*', 'designations.*') ? 'open' : '' }}>
                 <summary class="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-slate-400 rounded-xl hover:bg-slate-800/40 hover:text-slate-200 cursor-pointer transition-all duration-200 select-none">
                     <div class="flex items-center">
                         <span class="mr-3">⚙️</span>

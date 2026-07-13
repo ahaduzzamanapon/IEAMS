@@ -85,14 +85,15 @@ class PropertyController extends Controller
     }
 
     /**
-     * Delete an existing housing project.
+     * Archive (close) a housing project. SRS BR-03: Projects cannot be deleted, only archived.
      */
     public function destroyProject($id)
     {
         $project = Project::findOrFail($id);
         try {
-            $project->delete();
-            return back()->with('success', 'Project deleted successfully.');
+            // BR-03: Project Delete করা যাবে না। শুধুমাত্র Archive করা যাবে।
+            $project->update(['status' => 'closed']);
+            return back()->with('success', 'Project archived (closed) successfully. Projects cannot be permanently deleted per system policy.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -260,9 +261,18 @@ class PropertyController extends Controller
     // Rent Management
     public function rents(Request $request)
     {
-        $rents = Rent::with('apartment')->latest()->paginate(10);
+        $query = Rent::with(['apartment.floor.building']);
+        // Default: show active rents; optionally show terminated
+        $statusFilter = $request->input('status', 'active');
+        if ($statusFilter !== 'all') {
+            $query->where('status', $statusFilter);
+        }
+        $rents = $query->latest()->paginate(10)->withQueryString();
         $apartments = Apartment::where('status', 'vacant')->get();
-        return view('property.rents', compact('rents', 'apartments'));
+        $rentExpiringSoon = Rent::where('status', 'active')
+            ->whereBetween('rent_end_date', [now(), now()->addDays(30)])
+            ->count();
+        return view('property.rents', compact('rents', 'apartments', 'rentExpiringSoon', 'statusFilter'));
     }
 
     public function storeRent(Request $request)
@@ -321,14 +331,26 @@ class PropertyController extends Controller
     }
 
     /**
-     * Delete an existing rent agreement.
+     * Terminate (cancel) an existing rent agreement.
+     * BR-58: Rent Agreement cancellation must keep history — delete is NOT allowed.
      */
-    public function destroyRent($id)
+    public function destroyRent(Request $request, $id)
     {
         $rent = Rent::findOrFail($id);
         try {
-            $rent->delete();
-            return back()->with('success', 'Rent Agreement deleted successfully.');
+            if ($rent->status === 'terminated') {
+                return back()->with('error', 'This rent agreement is already terminated.');
+            }
+            $rent->update([
+                'status' => 'terminated',
+                'terminated_at' => now()->toDateString(),
+                'termination_reason' => $request->input('termination_reason', 'Terminated by admin.'),
+            ]);
+            // Restore apartment to vacant
+            if ($rent->apartment) {
+                $rent->apartment->update(['status' => 'vacant']);
+            }
+            return back()->with('success', 'Rent Agreement terminated. History preserved per SRS BR-58.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }

@@ -87,6 +87,16 @@ class DashboardController extends Controller
         $totalDrivers = Driver::count();
         $activeDrivers = Driver::where('status', 'active')->count();
 
+        $expiryWindow = Carbon::now()->addDays(30);
+        $licenseExpiring = \App\Models\Driver::whereNotNull('license_expiry_date')
+            ->whereBetween('license_expiry_date', [Carbon::now(), $expiryWindow])->count();
+        $fitnessExpiring = Vehicle::whereBetween('fitness_expiry_date', [Carbon::now(), $expiryWindow])->count();
+        $registrationExpiring = Vehicle::whereBetween('registration_expiry_date', [Carbon::now(), $expiryWindow])->count();
+        $taxTokenExpiring = Vehicle::whereNotNull('tax_token_expiry_date')
+            ->whereBetween('tax_token_expiry_date', [Carbon::now(), $expiryWindow])->count();
+        $insuranceExpiring = Vehicle::whereNotNull('insurance_expiry_date')
+            ->whereBetween('insurance_expiry_date', [Carbon::now(), $expiryWindow])->count();
+
         return view('dashboard', compact(
             'totalAssets', 'activeAssets', 'assignedAssets', 'availableAssets',
             'underWarranty', 'warrantyExpired', 'underMaintenance', 'scrapAssets',
@@ -97,7 +107,8 @@ class DashboardController extends Controller
             'totalApartments', 'vacantApartments', 'soldApartments', 'rentedApartments',
             'totalPlotSales', 'totalApartmentSales', 'totalRentalIncome',
             'totalVehicles', 'availableVehicles', 'assignedVehicles', 'underMaintenanceVehicles',
-            'accidentVehicles', 'outOfServiceVehicles', 'totalDrivers', 'activeDrivers'
+            'accidentVehicles', 'outOfServiceVehicles', 'totalDrivers', 'activeDrivers',
+            'licenseExpiring', 'fitnessExpiring', 'registrationExpiring', 'taxTokenExpiring', 'insuranceExpiring'
         ));
     }
 
@@ -122,14 +133,22 @@ class DashboardController extends Controller
         $rentedApartments = Apartment::where('status', 'rented')->count();
         $totalPlotSales = PropertySale::where('property_type', 'plot')->sum('sale_value');
         $totalApartmentSales = PropertySale::where('property_type', 'apartment')->sum('sale_value');
-        $totalRentalIncome = Rent::sum('monthly_rent');
+        $totalRentalIncome = Rent::where('status', 'active')->sum('monthly_rent');
+
+        // SRS Dashboard extras: Active Rent, Rent Expiring Soon
+        $activeRents = Rent::where('status', 'active')->count();
+        $rentExpiringSoon = Rent::where('status', 'active')
+            ->whereBetween('rent_end_date', [now(), now()->addDays(30)])
+            ->count();
+        $totalSaleValue = $totalPlotSales + $totalApartmentSales;
 
         return view('property.dashboard', compact(
             'totalProjects', 'activeProjects', 'completedProjects', 'totalLandArea',
             'totalPlots', 'vacantPlots', 'soldPlots', 'underConstructionPlots',
             'totalBuildings', 'underConstructionBuildings', 'completedBuildings',
             'totalApartments', 'vacantApartments', 'soldApartments', 'rentedApartments',
-            'totalPlotSales', 'totalApartmentSales', 'totalRentalIncome'
+            'totalPlotSales', 'totalApartmentSales', 'totalRentalIncome',
+            'activeRents', 'rentExpiringSoon', 'totalSaleValue'
         ));
     }
 
@@ -144,9 +163,25 @@ class DashboardController extends Controller
         $totalDrivers = Driver::count();
         $activeDrivers = Driver::where('status', 'active')->count();
 
+        $expiryWindow = Carbon::now()->addDays(30);
+
+        // Expiring soon counts (next 30 days)
+        $licenseExpiring = \App\Models\Driver::whereNotNull('license_expiry_date')
+            ->whereBetween('license_expiry_date', [Carbon::now(), $expiryWindow])->count();
+        $licenseExpired = \App\Models\Driver::whereNotNull('license_expiry_date')
+            ->where('license_expiry_date', '<', Carbon::now())->count();
+        $fitnessExpiring = Vehicle::whereBetween('fitness_expiry_date', [Carbon::now(), $expiryWindow])->count();
+        $registrationExpiring = Vehicle::whereBetween('registration_expiry_date', [Carbon::now(), $expiryWindow])->count();
+        $taxTokenExpiring = Vehicle::whereNotNull('tax_token_expiry_date')
+            ->whereBetween('tax_token_expiry_date', [Carbon::now(), $expiryWindow])->count();
+        $insuranceExpiring = Vehicle::whereNotNull('insurance_expiry_date')
+            ->whereBetween('insurance_expiry_date', [Carbon::now(), $expiryWindow])->count();
+
         return view('vehicles.dashboard', compact(
             'totalVehicles', 'availableVehicles', 'assignedVehicles', 'underMaintenanceVehicles',
-            'accidentVehicles', 'outOfServiceVehicles', 'totalDrivers', 'activeDrivers'
+            'accidentVehicles', 'outOfServiceVehicles', 'totalDrivers', 'activeDrivers',
+            'licenseExpiring', 'licenseExpired', 'fitnessExpiring', 'registrationExpiring',
+            'taxTokenExpiring', 'insuranceExpiring'
         ));
     }
 }

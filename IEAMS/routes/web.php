@@ -90,6 +90,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/designations', [DesignationController::class, 'index'])->name('designations.index');
     Route::post('/designations', [DesignationController::class, 'store'])->name('designations.store');
     Route::delete('/designations/{id}', [DesignationController::class, 'destroy'])->name('designations.destroy');
+    Route::get('/api/departments/{departmentId}/designations', [DesignationController::class, 'getDesignationsByDepartment'])->name('api.departments.designations');
 
     Route::get('/assets-reports', [AssetController::class, 'reports'])->name('assets.reports');
 
@@ -144,7 +145,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/property-reports', [PropertyController::class, 'reports'])->name('property.reports');
 
-    // Vehicle Management
+    Route::get('/vehicles/drivers', [VehicleController::class, 'drivers'])->name('vehicles.drivers');
+    Route::post('/vehicles/drivers/store', [VehicleController::class, 'storeDriver'])->name('vehicles.store-driver');
+
     Route::get('/vehicles/dashboard', [DashboardController::class, 'vehicleDashboard'])->name('vehicles.dashboard');
     Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
     Route::get('/vehicles/create', [VehicleController::class, 'create'])->name('vehicles.create');
@@ -152,15 +155,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/vehicles/{id}', [VehicleController::class, 'show'])->name('vehicles.show');
     Route::post('/vehicles/{id}/assign', [VehicleController::class, 'assign'])->name('vehicles.assign');
     Route::post('/vehicles/{id}/return', [VehicleController::class, 'return'])->name('vehicles.return');
-
-    Route::get('/vehicles/drivers', [VehicleController::class, 'drivers'])->name('vehicles.drivers');
-    Route::post('/vehicles/drivers/store', [VehicleController::class, 'storeDriver'])->name('vehicles.store-driver');
+    Route::post('/vehicles/{id}/maintenance', [VehicleController::class, 'storeMaintenance'])->name('vehicles.maintenance.store');
+    Route::post('/vehicles/{vehicleId}/maintenance/{maintenanceId}/complete', [VehicleController::class, 'completeMaintenance'])->name('vehicles.maintenance.complete');
 
     Route::get('/vehicles-reports', [VehicleController::class, 'reports'])->name('vehicles.reports');
 
     // GET fallbacks for Vehicle POST actions to redirect to the show page cleanly
     Route::get('/vehicles/{id}/assign', function ($id) { return redirect()->route('vehicles.show', $id); });
     Route::get('/vehicles/{id}/return', function ($id) { return redirect()->route('vehicles.show', $id); });
+    Route::get('/vehicles/{id}/maintenance', function ($id) { return redirect()->route('vehicles.show', $id); });
 
     // GET fallbacks for Property transaction stores to redirect cleanly
     Route::get('/property/sales/store', function () { return redirect()->route('property.sales'); });

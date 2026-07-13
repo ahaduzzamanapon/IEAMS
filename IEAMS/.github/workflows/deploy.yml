@@ -1,0 +1,115 @@
+name: Deploy IEAMS to Production (FTP)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    name: Build & Deploy via FTP
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout source code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Setup PHP 8.3
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, bcmath, pdo, pdo_mysql, tokenizer, xml, ctype, json, curl, gd, zip
+          coverage: none
+
+      # 3. Cache Composer dependencies
+      - name: Cache Composer Packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      # 4. Install PHP dependencies (no dev, optimized)
+      - name: Install Composer Dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      # 5. Setup Node.js for frontend build
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 6. Install Node.js packages
+      - name: Install NPM Dependencies
+        run: npm ci --ignore-scripts
+
+      # 7. Build frontend assets (Vite)
+      - name: Build Frontend Assets
+        run: npm run build
+
+      # 8. Prepare .env for production
+      - name: Prepare Production .env
+        run: |
+          cp .env.example .env
+          sed -i "s|APP_ENV=.*|APP_ENV=production|" .env
+          sed -i "s|APP_DEBUG=.*|APP_DEBUG=false|" .env
+          sed -i "s|APP_KEY=.*|APP_KEY=${{ secrets.APP_KEY }}|" .env
+          sed -i "s|APP_URL=.*|APP_URL=${{ secrets.APP_URL }}|" .env
+          sed -i "s|DB_HOST=.*|DB_HOST=${{ secrets.DB_HOST }}|" .env
+          sed -i "s|DB_PORT=.*|DB_PORT=${{ secrets.DB_PORT }}|" .env
+          sed -i "s|DB_DATABASE=.*|DB_DATABASE=${{ secrets.DB_DATABASE }}|" .env
+          sed -i "s|DB_USERNAME=.*|DB_USERNAME=${{ secrets.DB_USERNAME }}|" .env
+          sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.DB_PASSWORD }}|" .env
+
+      # 9. Optimize Laravel for production
+      - name: Optimize Laravel
+        run: |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+      # 10. Set storage directory permissions (create writable dirs)
+      - name: Prepare Storage Directories
+        run: |
+          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/views
+          mkdir -p storage/logs
+          chmod -R 775 storage bootstrap/cache
+
+      # 11. Deploy via FTP (credentials from GitHub Secrets ONLY)
+      - name: Deploy to Production Server via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          port: 21
+          protocol: ftp
+          local-dir: ./
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            **/.env.example
+            **/.editorconfig
+            **/.phpunit*
+            **/phpunit.xml
+            **/README.md
+            **/*.log
+            **/Thumbs.db
+            **/.DS_Store
+
+      # 12. Run Database Migrations on remote (via SSH if available, else skip)
+      - name: Notify Deployment Success
+        if: success()
+        run: |
+          echo "✅ IEAMS deployed successfully to ${{ secrets.FTP_HOST }}"
+          echo "🕐 Deployed at: $(date)"

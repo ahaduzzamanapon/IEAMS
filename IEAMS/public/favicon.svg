@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#0E1325"/>
+  <!-- Gradient overlay -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:0.1"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="url(#grad)"/>
+  <!-- Building icon -->
+  <rect x="6" y="17" width="8" height="11" rx="1" fill="#4f46e5" opacity="0.9"/>
+  <rect x="18" y="13" width="8" height="15" rx="1" fill="#6366f1" opacity="0.9"/>
+  <!-- Windows on small building -->
+  <rect x="8" y="19" width="2" height="2" rx="0.5" fill="white" opacity="0.8"/>
+  <rect x="11" y="19" width="2" height="2" rx="0.5" fill="white" opacity="0.8"/>
+  <!-- Windows on tall building -->
+  <rect x="20" y="15" width="2" height="2" rx="0.5" fill="white" opacity="0.8"/>
+  <rect x="23" y="15" width="2" height="2" rx="0.5" fill="white" opacity="0.8"/>
+  <rect x="20" y="19" width="2" height="2" rx="0.5" fill="white" opacity="0.8"/>
+  <rect x="23" y="19" width="2" height="2" rx="0.5" fill="white" opacity="0.8"/>
+  <!-- M letter top area -->
+  <text x="10" y="13" font-family="Arial, sans-serif" font-size="10" font-weight="900" fill="white" opacity="0.95">M</text>
+  <!-- Ground line -->
+  <rect x="4" y="27.5" width="24" height="1" rx="0.5" fill="#6366f1" opacity="0.6"/>
+</svg>

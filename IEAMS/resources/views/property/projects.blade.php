@@ -146,13 +146,17 @@
                                     <button type="button" onclick="showEditProjectModal({{ json_encode($proj) }})" class="px-2.5 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 font-semibold text-xs rounded-lg transition mr-1 cursor-pointer">
                                         Edit
                                     </button>
-                                    <form action="{{ route('property.destroy-project', $proj->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this project along with all associated lands, plots, buildings, floors, and apartments? This action cannot be undone.');" class="inline m-0">
+                                    @if($proj->status !== 'closed')
+                                    <form action="{{ route('property.destroy-project', $proj->id) }}" method="POST" onsubmit="return confirm('Archive this project? It will be marked as Closed and no longer editable. This action complies with NHA policy — projects cannot be permanently deleted.');" class="inline m-0">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="px-2.5 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 font-semibold text-xs rounded-lg transition cursor-pointer">
-                                            Delete
+                                        <button type="submit" class="px-2.5 py-1.5 bg-slate-600/20 hover:bg-slate-600/30 text-slate-400 font-semibold text-xs rounded-lg transition cursor-pointer">
+                                            Archive
                                         </button>
                                     </form>
+                                    @else
+                                    <span class="px-2.5 py-1.5 bg-slate-900/30 text-slate-600 text-xs rounded-lg">Archived</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

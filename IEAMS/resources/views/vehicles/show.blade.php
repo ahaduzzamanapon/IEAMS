@@ -72,20 +72,81 @@
                 <h3 class="text-md font-bold text-white uppercase tracking-wider border-b border-slate-850 pb-2">Licensing & Expiration Certificates</h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                    <div class="p-4 bg-[#080B11] rounded-xl border border-slate-800/60">
-                        <div class="text-xs font-semibold text-slate-400">Registration Status</div>
+                    <div class="p-4 bg-[#080B11] rounded-xl border {{ $vehicle->registration_expiry_date->isPast() ? 'border-rose-500/50' : ($vehicle->registration_expiry_date->diffInDays(now()) <= 30 ? 'border-amber-500/50' : 'border-slate-800/60') }}">
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs font-semibold text-slate-400">Registration Status</div>
+                            @if($vehicle->registration_expiry_date->isPast())
+                                <span class="text-[9px] font-bold text-rose-400 uppercase">⚠ Expired</span>
+                            @elseif($vehicle->registration_expiry_date->diffInDays(now()) <= 30)
+                                <span class="text-[9px] font-bold text-amber-400 uppercase">⚠ Expiring Soon</span>
+                            @else
+                                <span class="text-[9px] font-bold text-emerald-400 uppercase">✓ Valid</span>
+                            @endif
+                        </div>
                         <div class="text-sm font-bold text-white mt-1">Number: {{ $vehicle->registration_number }}</div>
                         <div class="text-xs text-slate-500 mt-2">
                             Valid from {{ $vehicle->registration_date->format('d M, Y') }} to <span class="text-indigo-400">{{ $vehicle->registration_expiry_date->format('d M, Y') }}</span>
                         </div>
                     </div>
-                    <div class="p-4 bg-[#080B11] rounded-xl border border-slate-800/60">
-                        <div class="text-xs font-semibold text-slate-400">Fitness Expiry Status</div>
+                    <div class="p-4 bg-[#080B11] rounded-xl border {{ $vehicle->fitness_expiry_date->isPast() ? 'border-rose-500/50' : ($vehicle->fitness_expiry_date->diffInDays(now()) <= 30 ? 'border-amber-500/50' : 'border-slate-800/60') }}">
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs font-semibold text-slate-400">Fitness Certificate</div>
+                            @if($vehicle->fitness_expiry_date->isPast())
+                                <span class="text-[9px] font-bold text-rose-400 uppercase">⚠ Expired</span>
+                            @elseif($vehicle->fitness_expiry_date->diffInDays(now()) <= 30)
+                                <span class="text-[9px] font-bold text-amber-400 uppercase">⚠ Expiring Soon</span>
+                            @else
+                                <span class="text-[9px] font-bold text-emerald-400 uppercase">✓ Valid</span>
+                            @endif
+                        </div>
                         <div class="text-sm font-bold text-white mt-1">Number: {{ $vehicle->fitness_certificate_number }}</div>
                         <div class="text-xs text-slate-500 mt-2">
                             Valid from {{ $vehicle->fitness_issue_date->format('d M, Y') }} to <span class="text-indigo-400">{{ $vehicle->fitness_expiry_date->format('d M, Y') }}</span>
                         </div>
                     </div>
+
+                    @if($vehicle->tax_token_number)
+                    <div class="p-4 bg-[#080B11] rounded-xl border {{ $vehicle->tax_token_expiry_date && $vehicle->tax_token_expiry_date->isPast() ? 'border-rose-500/50' : ($vehicle->tax_token_expiry_date && $vehicle->tax_token_expiry_date->diffInDays(now()) <= 30 ? 'border-amber-500/50' : 'border-slate-800/60') }}">
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs font-semibold text-slate-400">Tax Token</div>
+                            @if($vehicle->tax_token_expiry_date && $vehicle->tax_token_expiry_date->isPast())
+                                <span class="text-[9px] font-bold text-rose-400 uppercase">⚠ Expired</span>
+                            @elseif($vehicle->tax_token_expiry_date && $vehicle->tax_token_expiry_date->diffInDays(now()) <= 30)
+                                <span class="text-[9px] font-bold text-amber-400 uppercase">⚠ Expiring Soon</span>
+                            @elseif($vehicle->tax_token_expiry_date)
+                                <span class="text-[9px] font-bold text-emerald-400 uppercase">✓ Valid</span>
+                            @endif
+                        </div>
+                        <div class="text-sm font-bold text-white mt-1">Number: {{ $vehicle->tax_token_number }}</div>
+                        <div class="text-xs text-slate-500 mt-2">
+                            @if($vehicle->tax_token_expiry_date)
+                                Expires: <span class="text-indigo-400">{{ $vehicle->tax_token_expiry_date->format('d M, Y') }}</span>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+
+                    @if($vehicle->insurance_number)
+                    <div class="p-4 bg-[#080B11] rounded-xl border {{ $vehicle->insurance_expiry_date && $vehicle->insurance_expiry_date->isPast() ? 'border-rose-500/50' : ($vehicle->insurance_expiry_date && $vehicle->insurance_expiry_date->diffInDays(now()) <= 30 ? 'border-amber-500/50' : 'border-slate-800/60') }}">
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs font-semibold text-slate-400">Insurance</div>
+                            @if($vehicle->insurance_expiry_date && $vehicle->insurance_expiry_date->isPast())
+                                <span class="text-[9px] font-bold text-rose-400 uppercase">⚠ Expired</span>
+                            @elseif($vehicle->insurance_expiry_date && $vehicle->insurance_expiry_date->diffInDays(now()) <= 30)
+                                <span class="text-[9px] font-bold text-amber-400 uppercase">⚠ Expiring Soon</span>
+                            @elseif($vehicle->insurance_expiry_date)
+                                <span class="text-[9px] font-bold text-emerald-400 uppercase">✓ Valid</span>
+                            @endif
+                        </div>
+                        <div class="text-sm font-bold text-white mt-1">Policy: {{ $vehicle->insurance_number }}</div>
+                        <div class="text-xs text-slate-500 mt-2">
+                            {{ $vehicle->insurance_company ? 'Company: ' . $vehicle->insurance_company : '' }}
+                            @if($vehicle->insurance_expiry_date)
+                                | Expires: <span class="text-indigo-400">{{ $vehicle->insurance_expiry_date->format('d M, Y') }}</span>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -208,6 +269,100 @@
             @empty
                 <div class="text-slate-650 italic text-xs">No historical assignments logged.</div>
             @endforelse
+        </div>
+    </div>
+
+    <!-- Maintenance Log (SRS 4.2.6) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Add Maintenance Form -->
+        <div class="p-6 rounded-2xl bg-[#0E1325]/80 border border-slate-800/80 space-y-4 lg:col-span-1">
+            <h3 class="text-md font-bold text-white uppercase tracking-wider border-b border-slate-800 pb-2">Log Maintenance</h3>
+            <form action="{{ route('vehicles.maintenance.store', $vehicle->id) }}" method="POST" class="space-y-3">
+                @csrf
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Maintenance Type *</label>
+                    <select name="maintenance_type" required class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                        <option value="repair">Repair</option>
+                        <option value="servicing">Servicing</option>
+                        <option value="inspection">Inspection</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Maintenance Date *</label>
+                    <input type="date" name="maintenance_date" required class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Workshop / Vendor</label>
+                    <input type="text" name="workshop_name" placeholder="Workshop name" class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Cost (৳) *</label>
+                    <input type="number" step="0.01" name="cost" min="0" required class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Description *</label>
+                    <textarea name="description" required rows="3" placeholder="Describe the maintenance work..." class="w-full bg-[#080B11] border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"></textarea>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs rounded-xl transition">
+                    Log Maintenance Record
+                </button>
+                <p class="text-[9px] text-slate-600 text-center">BR-08: Vehicle status will be set to "Under Maintenance"</p>
+            </form>
+        </div>
+
+        <!-- Maintenance History -->
+        <div class="p-6 rounded-2xl bg-[#0E1325]/80 border border-slate-800/80 lg:col-span-2 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 class="text-md font-bold text-white uppercase tracking-wider">Maintenance History</h3>
+                <span class="text-[10px] text-slate-600">BR-10: Records cannot be deleted</span>
+            </div>
+            <div class="space-y-3">
+                @forelse($vehicle->maintenances()->latest()->get() as $maint)
+                    <div class="p-4 bg-[#080B11] rounded-xl border border-slate-800/60 text-xs">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="px-2 py-0.5 text-[9px] font-bold rounded-full uppercase {{ $maint->maintenance_type === 'repair' ? 'bg-rose-500/10 text-rose-400' : ($maint->maintenance_type === 'servicing' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-sky-500/10 text-sky-400') }}">
+                                        {{ $maint->maintenance_type }}
+                                    </span>
+                                    <span class="px-2 py-0.5 text-[9px] font-bold rounded-full {{ $maint->status === 'completed' ? 'bg-slate-800 text-slate-500' : 'bg-amber-500/10 text-amber-400' }}">
+                                        {{ strtoupper($maint->status) }}
+                                    </span>
+                                </div>
+                                <div class="text-white font-semibold">{{ $maint->description }}</div>
+                                @if($maint->workshop_name)
+                                    <div class="text-slate-500 mt-0.5">Workshop: {{ $maint->workshop_name }}</div>
+                                @endif
+                                <div class="text-slate-500 mt-0.5">Date: {{ $maint->maintenance_date->format('d M, Y') }}
+                                    @if($maint->completion_date)
+                                        → Completed: {{ $maint->completion_date->format('d M, Y') }}
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="text-right ml-4">
+                                <div class="text-white font-bold">৳{{ number_format($maint->cost, 2) }}</div>
+                                @if($maint->status === 'ongoing')
+                                    <form action="{{ route('vehicles.maintenance.complete', [$vehicle->id, $maint->id]) }}" method="POST" class="mt-2">
+                                        @csrf
+                                        <input type="date" name="completion_date" required class="w-full bg-[#080B11] border border-slate-700/50 rounded-lg px-2 py-1 text-[10px] text-white focus:outline-none mb-1">
+                                        <button type="submit" class="w-full py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-[10px] rounded-lg transition">
+                                            Mark Complete
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-slate-600 italic text-xs text-center py-6">No maintenance records logged for this vehicle.</div>
+                @endforelse
+            </div>
+            @if($vehicle->maintenances()->count() > 0)
+                <div class="pt-2 border-t border-slate-800/60 flex justify-between text-xs">
+                    <span class="text-slate-500">Total Maintenance Records: {{ $vehicle->maintenances()->count() }}</span>
+                    <span class="text-white font-semibold">Total Cost: ৳{{ number_format($vehicle->maintenances()->sum('cost'), 2) }}</span>
+                </div>
+            @endif
         </div>
     </div>
 

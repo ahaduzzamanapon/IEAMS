@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Vehicle;
 use App\Models\Driver;
 use App\Models\VehicleAssignment;
+use App\Models\VehicleMaintenance;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -48,6 +49,13 @@ class VehicleController extends Controller
             'fitness_certificate_number' => 'required|string',
             'fitness_issue_date' => 'required|date',
             'fitness_expiry_date' => 'required|date|after:fitness_issue_date',
+            'tax_token_number' => 'nullable|string',
+            'tax_token_issue_date' => 'nullable|date',
+            'tax_token_expiry_date' => 'nullable|date|after_or_equal:tax_token_issue_date',
+            'insurance_number' => 'nullable|string',
+            'insurance_company' => 'nullable|string',
+            'insurance_issue_date' => 'nullable|date',
+            'insurance_expiry_date' => 'nullable|date|after_or_equal:insurance_issue_date',
             'vehicle_type' => 'required|string',
             'vehicle_category' => 'required|string',
             'vehicle_name' => 'required|string',
@@ -169,5 +177,50 @@ class VehicleController extends Controller
         $assignments = VehicleAssignment::with(['vehicle', 'driver', 'officer'])->latest()->get();
 
         return view('vehicles.reports', compact('vehicles', 'drivers', 'assignments'));
+    }
+
+    /**
+     * Store a new Vehicle Maintenance record (SRS 4.2.6)
+     * BR-08: Sets vehicle status to 'under_maintenance' on creation
+     */
+    public function storeMaintenance(Request $request, $id)
+    {
+        $vehicle = Vehicle::findOrFail($id);
+        $validated = $request->validate([
+            'maintenance_type' => 'required|in:repair,servicing,inspection',
+            'maintenance_date' => 'required|date',
+            'workshop_name' => 'nullable|string|max:255',
+            'description' => 'required|string',
+            'cost' => 'required|numeric|min:0',
+        ]);
+        try {
+            $validated['vehicle_id'] = $vehicle->id;
+            $validated['status'] = 'ongoing';
+            VehicleMaintenance::create($validated);
+            return back()->with('success', 'Maintenance record logged. Vehicle status set to Under Maintenance.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Mark Vehicle Maintenance as completed (SRS BR-09)
+     * Restores vehicle status to previous/available
+     */
+    public function completeMaintenance(Request $request, $vehicleId, $maintenanceId)
+    {
+        $maintenance = VehicleMaintenance::where('vehicle_id', $vehicleId)->findOrFail($maintenanceId);
+        try {
+            $validated = $request->validate([
+                'completion_date' => 'required|date|after_or_equal:' . $maintenance->maintenance_date->toDateString(),
+            ]);
+            $maintenance->update([
+                'status' => 'completed',
+                'completion_date' => $validated['completion_date'],
+            ]);
+            return back()->with('success', 'Maintenance completed. Vehicle status restored.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

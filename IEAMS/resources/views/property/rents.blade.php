@@ -80,8 +80,21 @@
         </div>
 
         <!-- Rent list -->
-        <div class="p-6 rounded-2xl bg-[#0E1325]/80 border border-slate-800/80 lg:col-span-2">
-            <h3 class="text-lg font-bold text-white mb-6">Active Rent Agreements</h3>
+        <div class="p-6 rounded-2xl bg-[#0E1325]/80 border border-slate-800/80 lg:col-span-2 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-white">Rent Agreements</h3>
+                @if(isset($rentExpiringSoon) && $rentExpiringSoon > 0)
+                    <span class="px-3 py-1 bg-amber-500/10 text-amber-400 text-xs font-bold rounded-full">⚠ {{ $rentExpiringSoon }} Expiring in 30 Days</span>
+                @endif
+            </div>
+
+            <!-- Status Filter Tabs -->
+            <div class="flex gap-2">
+                <a href="?status=active" class="px-3 py-1.5 text-xs font-semibold rounded-lg {{ ($statusFilter ?? 'active') === 'active' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700' }} transition">Active</a>
+                <a href="?status=terminated" class="px-3 py-1.5 text-xs font-semibold rounded-lg {{ ($statusFilter ?? '') === 'terminated' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700' }} transition">Terminated</a>
+                <a href="?status=all" class="px-3 py-1.5 text-xs font-semibold rounded-lg {{ ($statusFilter ?? '') === 'all' ? 'bg-slate-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700' }} transition">All</a>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm text-slate-300">
                     <thead class="bg-slate-900/60 text-slate-400 text-xs uppercase font-medium">
@@ -90,46 +103,55 @@
                             <th class="px-6 py-4">Tenant Details</th>
                             <th class="px-6 py-4">Rent / Mo</th>
                             <th class="px-6 py-4">Timeline</th>
-                            <th class="px-6 py-4">Agreement</th>
+                            <th class="px-6 py-4">Status</th>
                             <th class="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-800/60">
                         @forelse($rents as $rent)
-                            <tr class="hover:bg-slate-800/20">
+                            <tr class="hover:bg-slate-800/20 {{ $rent->status === 'terminated' ? 'opacity-60' : '' }}">
                                 <td class="px-6 py-4 text-xs font-bold text-white">
-                                    Apt {{ $rent->apartment->apartment_number }}
-                                    <div class="text-slate-500 font-normal">Bldg: {{ $rent->apartment->floor->building->name }}</div>
+                                    Apt {{ $rent->apartment?->apartment_number ?? 'N/A' }}
+                                    <div class="text-slate-500 font-normal">Bldg: {{ $rent->apartment?->floor?->building?->name ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 text-xs">
                                     <div class="font-semibold text-white">{{ $rent->tenant_name }}</div>
-                                    <div class="text-slate-500">Mob: {{ $rent->mobile }} | Occupation: {{ $rent->occupation }}</div>
+                                    <div class="text-slate-500">Mob: {{ $rent->mobile }}</div>
                                 </td>
                                 <td class="px-6 py-4 text-xs font-bold text-white">
                                     ৳{{ number_format($rent->monthly_rent, 2) }}
                                 </td>
                                 <td class="px-6 py-4 text-xs text-slate-400">
                                     {{ $rent->rent_start_date->format('d M, Y') }} to {{ $rent->rent_end_date->format('d M, Y') }}
+                                    @if($rent->status === 'active' && $rent->rent_end_date->diffInDays(now()) <= 30 && $rent->rent_end_date->isFuture())
+                                        <div class="text-[9px] font-bold text-amber-400 mt-0.5">⚠ Expiring Soon</div>
+                                    @endif
                                 </td>
-                                <td class="px-6 py-4 text-xs font-mono text-slate-400">
-                                    {{ $rent->agreement_number ?? 'N/A' }}
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-0.5 text-[9px] font-bold rounded-full {{ $rent->status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400' }}">
+                                        {{ strtoupper($rent->status) }}
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 text-xs text-right whitespace-nowrap">
-                                    <button type="button" onclick="showEditModal({{ json_encode($rent) }})" class="px-2.5 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 font-semibold rounded-lg transition mr-1 cursor-pointer">
-                                        Edit
-                                    </button>
-                                    <form action="{{ route('property.destroy-rent', $rent->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this Rent Agreement?');" class="inline m-0">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="px-2.5 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 font-semibold rounded-lg transition cursor-pointer">
-                                            Delete
+                                    @if($rent->status === 'active')
+                                        <button type="button" onclick="showEditModal({{ json_encode($rent) }})" class="px-2.5 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 font-semibold rounded-lg transition mr-1 cursor-pointer">
+                                            Edit
                                         </button>
-                                    </form>
+                                        <form action="{{ route('property.destroy-rent', $rent->id) }}" method="POST" onsubmit="return confirm('Terminate this rent agreement? History will be preserved per NHA policy (SRS BR-58).');" class="inline m-0">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="px-2.5 py-1.5 bg-slate-600/20 hover:bg-slate-600/30 text-slate-400 font-semibold rounded-lg transition cursor-pointer">
+                                                Terminate
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="text-[10px] text-slate-600">Terminated {{ $rent->terminated_at?->format('d M, Y') }}</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-slate-500">No rent agreements active.</td>
+                                <td colspan="6" class="px-6 py-8 text-center text-slate-500">No rent agreements found for selected status.</td>
                             </tr>
                         @endforelse
                     </tbody>
