@@ -28,16 +28,19 @@ class SystemLockController extends Controller
             return redirect()->route('system.lock')->with('error', 'System is already locked and encrypted!');
         }
 
-        // Save the key hash first
-        CodeCrypter::saveKeyHash($request->input('shield_key'));
+        $key   = $request->input('shield_key');
+
+        // Save bcrypt hash (for admin auth) and the derived AES runtime key (for file execution)
+        CodeCrypter::saveKeyHash($key);
+        CodeCrypter::saveRuntimeKey($key);
 
         $files = CodeCrypter::sortFilesForProcessing(CodeCrypter::getTargetFiles());
         $count = 0;
-        $logs = [];
-        $base = base_path() . DIRECTORY_SEPARATOR;
+        $logs  = [];
+        $base  = base_path() . DIRECTORY_SEPARATOR;
         foreach ($files as $file) {
             $relativePath = str_replace($base, '', $file);
-            if (CodeCrypter::encryptFile($file)) {
+            if (CodeCrypter::encryptFile($file, $key)) {
                 $count++;
                 $logs[] = "Encrypted: {$relativePath}";
             } else {
@@ -67,13 +70,14 @@ class SystemLockController extends Controller
             return redirect()->route('system.lock')->with('error', 'Unauthorized: Invalid Security Decryption Key!');
         }
 
+        $key   = $request->input('shield_key');
         $files = CodeCrypter::sortFilesForProcessing(CodeCrypter::getTargetFiles());
         $count = 0;
-        $logs = [];
-        $base = base_path() . DIRECTORY_SEPARATOR;
+        $logs  = [];
+        $base  = base_path() . DIRECTORY_SEPARATOR;
         foreach ($files as $file) {
             $relativePath = str_replace($base, '', $file);
-            if (CodeCrypter::decryptFile($file)) {
+            if (CodeCrypter::decryptFile($file, $key)) {
                 $count++;
                 $logs[] = "Decrypted/Refreshed: {$relativePath}";
             } else {

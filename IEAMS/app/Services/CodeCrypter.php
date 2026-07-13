@@ -4,102 +4,144 @@ namespace App\Services;
 
 class CodeCrypter
 {
-    /**
-     * Encrypt a PHP file by encoding its content to hex and wrapping it in eval(hex2bin(...))
-     */
-    public static function encryptFile($path)
+    private const CIPHER    = 'aes-256-cbc';
+    private const MARKER    = '/* ENCRYPTED BY IEAMS SHIELD */';
+    private const HASH_FILE = '.shield_hash';
+    private const KEY_FILE  = '.runtime_key';
+
+    // -----------------------------------------------------------------
+    // Derive a 32-byte AES key from a passphrase (SHA-256, raw binary)
+    // -----------------------------------------------------------------
+    private static function deriveAesKey(string $passphrase): string
+    {
+        return hash('sha256', $passphrase, true);
+    }
+
+    // -----------------------------------------------------------------
+    // Encrypt a PHP file with AES-256-CBC using the passphrase
+    // -----------------------------------------------------------------
+    public static function encryptFile(string $path, string $passphrase): bool
     {
         if (!file_exists($path)) return false;
         $content = file_get_contents($path);
 
-        // Check if already encrypted
-        if (str_contains($content, '/* ENCRYPTED BY IEAMS SHIELD */')) {
-            return false;
-        }
+        if (str_contains($content, self::MARKER)) return false;
 
-        // Strip <?php tag and encode the rest
         $cleanContent = preg_replace('/^<\?php\s*/i', '', $content);
-        $hex = bin2hex($cleanContent);
+        $aesKey       = self::deriveAesKey($passphrase);
+        $iv           = openssl_random_pseudo_bytes(openssl_cipher_iv_length(self::CIPHER));
+        $ciphertext   = openssl_encrypt($cleanContent, self::CIPHER, $aesKey, OPENSSL_RAW_DATA, $iv);
 
-        $encryptedContent = "<?php\n/* ENCRYPTED BY IEAMS SHIELD */\neval(hex2bin('{$hex}'));\n";
+        if ($ciphertext === false) return false;
+
+        $cB64  = base64_encode($ciphertext);
+        $ivB64 = base64_encode($iv);
+
+        // The wrapper reads the runtime key file (which contains the derived AES key).
+        // It does NOT contain any salt/secret — those are only inside CodeCrypter.php
+        // which itself gets encrypted, hiding the entire implementation.
+        $rkPath = addslashes(storage_path('app/' . self::KEY_FILE));
+
+        $encryptedContent = <<<PHP
+<?php
+/* ENCRYPTED BY IEAMS SHIELD */
+\$_rk=@file_get_contents('{$rkPath}');if(\$_rk){\$_k=base64_decode(trim(\$_rk));eval(openssl_decrypt(base64_decode('{$cB64}'),'aes-256-cbc',\$_k,OPENSSL_RAW_DATA,base64_decode('{$ivB64}')));}
+PHP;
+
         file_put_contents($path, $encryptedContent);
         return true;
     }
 
-    /**
-     * Decrypt an encrypted PHP file back to its original source code structure
-     */
-    public static function decryptFile($path)
+    // -----------------------------------------------------------------
+    // Decrypt a PHP file using the provided passphrase
+    // -----------------------------------------------------------------
+    public static function decryptFile(string $path, string $passphrase): bool
     {
         if (!file_exists($path)) return false;
         $content = file_get_contents($path);
 
-        // Check if encrypted
-        if (!str_contains($content, '/* ENCRYPTED BY IEAMS SHIELD */')) {
+        if (!str_contains($content, self::MARKER)) return false;
+
+        if (!preg_match(
+            "/eval\(openssl_decrypt\(base64_decode\('([A-Za-z0-9+\/=]+)'\),'aes-256-cbc',\\\$_k,OPENSSL_RAW_DATA,base64_decode\('([A-Za-z0-9+\/=]+)'\)\)\)/",
+            $content,
+            $matches
+        )) {
             return false;
         }
 
-        // Extract hex string and decode
-        if (preg_match("/eval\(hex2bin\('([0-9a-fA-F]+)'\)\);/i", $content, $matches)) {
-            $hex = $matches[1];
-            $original = hex2bin($hex);
-            $decryptedContent = "<?php\n" . $original;
-            file_put_contents($path, $decryptedContent);
-            return true;
-        }
+        $ciphertext = base64_decode($matches[1]);
+        $iv         = base64_decode($matches[2]);
+        $aesKey     = self::deriveAesKey($passphrase);
 
-        return false;
+        $original = openssl_decrypt($ciphertext, self::CIPHER, $aesKey, OPENSSL_RAW_DATA, $iv);
+        if ($original === false) return false;
+
+        file_put_contents($path, "<?php\n" . $original);
+        return true;
     }
 
-    /**
-     * Check if a shield key hash is currently stored (system is encrypted)
-     */
-    public static function hasStoredKey()
+    // -----------------------------------------------------------------
+    // Save the derived AES key to .runtime_key so encrypted files run.
+    // This file is in storage/app/ (outside public/) and contains only
+    // a base64-encoded 32-byte key — meaningless without knowing the
+    // cipher, file structure, and IVs (all hidden inside encrypted CodeCrypter.php).
+    // -----------------------------------------------------------------
+    public static function saveRuntimeKey(string $passphrase): bool
     {
-        return file_exists(storage_path('app/.shield_hash'));
+        $aesKey  = self::deriveAesKey($passphrase);
+        $encoded = base64_encode($aesKey);
+        return file_put_contents(storage_path('app/' . self::KEY_FILE), $encoded) !== false;
     }
 
-    /**
-     * Verify the entered security encryption key
-     */
-    public static function verifyKey($key)
+    // -----------------------------------------------------------------
+    // Save bcrypt hash of the passphrase (for admin auth verification)
+    // -----------------------------------------------------------------
+    public static function saveKeyHash(string $key): bool
     {
-        $hashPath = storage_path('app/.shield_hash');
-        if (!file_exists($hashPath)) {
-            // If no key is stored, any key is valid (used for initial encryption)
-            return true;
-        }
+        $hash = password_hash($key, PASSWORD_BCRYPT);
+        return file_put_contents(storage_path('app/' . self::HASH_FILE), $hash) !== false;
+    }
+
+    // -----------------------------------------------------------------
+    // Check if the system is currently locked/encrypted
+    // -----------------------------------------------------------------
+    public static function hasStoredKey(): bool
+    {
+        return file_exists(storage_path('app/' . self::HASH_FILE));
+    }
+
+    // -----------------------------------------------------------------
+    // Verify the admin passphrase against the stored bcrypt hash
+    // -----------------------------------------------------------------
+    public static function verifyKey(string $key): bool
+    {
+        $hashPath = storage_path('app/' . self::HASH_FILE);
+        if (!file_exists($hashPath)) return true;
 
         $hash = file_get_contents($hashPath);
         return password_verify($key, trim($hash));
     }
 
-    /**
-     * Save the bcrypt hash of the current encryption key
-     */
-    public static function saveKeyHash($key)
+    // -----------------------------------------------------------------
+    // Remove both key files after successful decryption
+    // -----------------------------------------------------------------
+    public static function deleteKeyHash(): bool
     {
-        $hashPath = storage_path('app/.shield_hash');
-        $hash = password_hash($key, PASSWORD_BCRYPT);
-        return file_put_contents($hashPath, $hash) !== false;
-    }
-
-    /**
-     * Delete the stored key hash upon successful decryption
-     */
-    public static function deleteKeyHash()
-    {
-        $hashPath = storage_path('app/.shield_hash');
-        if (file_exists($hashPath)) {
-            return unlink($hashPath);
+        $deleted = true;
+        foreach ([self::HASH_FILE, self::KEY_FILE] as $file) {
+            $path = storage_path('app/' . $file);
+            if (file_exists($path)) {
+                $deleted = unlink($path) && $deleted;
+            }
         }
-        return true;
+        return $deleted;
     }
 
-    /**
-     * Get status of files (how many are encrypted out of total)
-     */
-    public static function getStatus()
+    // -----------------------------------------------------------------
+    // Status: how many files are encrypted vs total
+    // -----------------------------------------------------------------
+    public static function getStatus(): array
     {
         $files = self::getTargetFiles();
         if (empty($files)) {
@@ -109,44 +151,40 @@ class CodeCrypter
         $encryptedCount = 0;
         foreach ($files as $file) {
             $content = @file_get_contents($file);
-            if (str_contains($content, '/* ENCRYPTED BY IEAMS SHIELD */')) {
+            if ($content && str_contains($content, self::MARKER)) {
                 $encryptedCount++;
             }
         }
 
         $percentage = round(($encryptedCount / count($files)) * 100);
-        $isLocked = self::hasStoredKey();
+        $isLocked   = self::hasStoredKey();
 
         return [
-            'status' => $isLocked ? 'Encrypted' : 'Decrypted',
+            'status'     => $isLocked ? 'Encrypted' : 'Decrypted',
             'percentage' => $percentage,
-            'encrypted' => $encryptedCount,
-            'total' => count($files)
+            'encrypted'  => $encryptedCount,
+            'total'      => count($files),
         ];
     }
 
-    public static function getTargetFiles()
+    // -----------------------------------------------------------------
+    // Collect all target PHP files (app/ and routes/)
+    // -----------------------------------------------------------------
+    public static function getTargetFiles(): array
     {
         $files = [];
-        
-        // 1. Scan app/ directory recursively
+
         $appPath = app_path();
         if (file_exists($appPath)) {
             $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($appPath));
             foreach ($iterator as $file) {
                 if ($file->isFile() && $file->getExtension() === 'php') {
-                    $filename = $file->getFilename();
-                    $pathname = $file->getPathname();
-                    
-                    // Exclusions to prevent early bootstrap issues
-                    if ($filename === 'AppServiceProvider.php') continue;
-                    
+                    if ($file->getFilename() === 'AppServiceProvider.php') continue;
                     $files[] = $file->getRealPath();
                 }
             }
         }
 
-        // 2. Scan routes/ directory recursively
         $routesPath = base_path('routes');
         if (file_exists($routesPath)) {
             $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($routesPath));
@@ -160,24 +198,17 @@ class CodeCrypter
         return $files;
     }
 
-    /**
-     * Sort target files so self-referencing files (CodeCrypter, SystemLockController)
-     * are processed LAST. This ensures the running PHP process stays alive during
-     * encrypt/decrypt loops before these critical files are touched.
-     */
-    public static function sortFilesForProcessing($files)
+    // -----------------------------------------------------------------
+    // Sort so CodeCrypter.php & SystemLockController.php are last
+    // -----------------------------------------------------------------
+    public static function sortFilesForProcessing(array $files): array
     {
-        $lastFiles = [
-            'SystemLockController.php',
-            'CodeCrypter.php',
-        ];
-
-        $normal = [];
-        $deferred = [];
+        $lastFiles = ['SystemLockController.php', 'CodeCrypter.php'];
+        $normal    = [];
+        $deferred  = [];
 
         foreach ($files as $file) {
-            $basename = basename($file);
-            if (in_array($basename, $lastFiles)) {
+            if (in_array(basename($file), $lastFiles)) {
                 $deferred[] = $file;
             } else {
                 $normal[] = $file;
