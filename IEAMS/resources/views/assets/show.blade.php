@@ -367,9 +367,9 @@ Sub-Category: {{ $asset->subCategory->name }}
 Brand: {{ $asset->brand }}
 Model: {{ $asset->model }}
 Serial Number: {{ $asset->serial_number }}
-Purchase Cost: ৳{{ number_format($asset->purchase_cost, 2) }}
-Capitalized Cost: ৳{{ number_format($asset->capitalized_cost, 2) }}
-Total Cost: ৳{{ number_format($asset->total_cost, 2) }}
+Purchase Cost: TK {{ number_format($asset->purchase_cost, 2) }}
+Capitalized Cost: TK {{ number_format($asset->capitalized_cost, 2) }}
+Total Cost: TK {{ number_format($asset->total_cost, 2) }}
 PO Number: {{ $asset->purchase_order_number ?? 'N/A' }}
 Invoice: {{ $asset->invoice_number ?? 'N/A' }}
 Vendor: {{ $asset->vendor ? $asset->vendor->name : 'N/A' }}
