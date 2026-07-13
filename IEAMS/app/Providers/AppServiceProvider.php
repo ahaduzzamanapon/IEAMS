@@ -40,17 +40,13 @@ class CustomSQLiteBuilder extends \Illuminate\Database\Schema\SQLiteBuilder
         $columns = [];
         foreach ($results as $row) {
             $row = (array) $row;
-            $typeName = strtolower(explode('(', $row['type'])[0]);
             $columns[] = [
                 'name' => $row['name'],
                 'type' => strtolower($row['type']),
-                'type_name' => $typeName,
-                'collation' => null,
                 'nullable' => !((bool) $row['notnull']),
                 'default' => $row['dflt_value'],
-                'auto_increment' => false, // fallback
-                'comment' => null,
-                'generation' => null
+                'primary' => (bool) $row['pk'],
+                'extra' => 0, // 0 = standard column, 2/3 = generated
             ];
         }
 
