@@ -66,7 +66,11 @@ jobs:
           mkdir -p storage/logs
           chmod -R 775 storage bootstrap/cache
 
-      # 9. Deploy via FTP
+      # 9. Create needs_migrate.php trigger file for production auto-migration
+      - name: Create Post-Deploy Trigger File
+        run: echo "<?php // trigger" > bootstrap/cache/needs_migrate.php
+
+      # 10. Deploy via FTP
       # server-dir is hardcoded to root './', and .env is excluded from upload
       - name: Deploy to Production Server via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
