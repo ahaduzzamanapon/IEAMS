@@ -44,15 +44,6 @@ Route::get('/api/deploy-hook', function (\Illuminate\Http\Request $request) {
             $log[] = "bootstrap route cache removed";
         }
 
-        // Clean dirty states from previous failed migrations on older server environment
-        \Illuminate\Support\Facades\Schema::dropIfExists('vehicle_maintenances');
-        \Illuminate\Support\Facades\Schema::dropIfExists('notifications');
-        \Illuminate\Support\Facades\Schema::dropIfExists('designations');
-        \Illuminate\Support\Facades\Schema::dropIfExists('departments');
-        \Illuminate\Support\Facades\Schema::dropIfExists('branches');
-        \Illuminate\Support\Facades\Schema::dropIfExists('offices');
-        $log[] = "cleaned dirty migration states";
-
         // Run migrations
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         $log[] = "migrate: " . trim(\Illuminate\Support\Facades\Artisan::output());
@@ -275,14 +266,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/run-migrations', function () {
         try {
-            // Clean dirty state from previous crashed runs on old server SQLite
-            \Illuminate\Support\Facades\Schema::dropIfExists('vehicle_maintenances');
-            \Illuminate\Support\Facades\Schema::dropIfExists('notifications');
-            \Illuminate\Support\Facades\Schema::dropIfExists('designations');
-            \Illuminate\Support\Facades\Schema::dropIfExists('departments');
-            \Illuminate\Support\Facades\Schema::dropIfExists('branches');
-            \Illuminate\Support\Facades\Schema::dropIfExists('offices');
-            
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
             $output = \Illuminate\Support\Facades\Artisan::output();
 
