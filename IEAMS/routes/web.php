@@ -197,7 +197,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // System Optimization & Cache Clear
-    Route::post('/clear-cache', function () {
+    Route::any('/clear-cache', function () {
         \Illuminate\Support\Facades\Artisan::call('config:clear');
         \Illuminate\Support\Facades\Artisan::call('route:clear');
         \Illuminate\Support\Facades\Artisan::call('view:clear');
