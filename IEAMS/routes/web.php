@@ -48,12 +48,6 @@ Route::get('/api/deploy-hook', function (\Illuminate\Http\Request $request) {
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         $log[] = "migrate: " . trim(\Illuminate\Support\Facades\Artisan::output());
 
-        // Run db:seed to seed new database if empty
-        if (\App\Models\User::count() === 0) {
-            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-            $log[] = "database seeded successfully";
-        }
-
         // Clear general caches
         \Illuminate\Support\Facades\Artisan::call('cache:clear');
         \Illuminate\Support\Facades\Artisan::call('view:clear');
@@ -267,15 +261,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/run-migrations', function () {
         try {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-            $output = \Illuminate\Support\Facades\Artisan::output();
-
-            // Seed if empty
-            if (\App\Models\User::count() === 0) {
-                \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-                $output .= "\n\nSeeding successful!";
-            }
-
-            return '<h1>Migration & Seeding Success</h1><pre>' . $output . '</pre><p><a href="/">Go back to Dashboard</a></p>';
+            return '<h1>Migration Success</h1><pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre><p><a href="/">Go back to Dashboard</a></p>';
         } catch (\Exception $e) {
             return '<h1>Migration Failed</h1><pre>' . $e->getMessage() . '</pre>';
         }
