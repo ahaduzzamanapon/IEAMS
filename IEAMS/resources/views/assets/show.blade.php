@@ -31,9 +31,9 @@
             <div class="flex items-center gap-4 bg-[#0E1325]/85 border border-slate-800/80 p-3 rounded-2xl shadow-xl">
                 <div id="qrcode" class="p-1 bg-white rounded-lg"></div>
                 <div class="space-y-1">
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Asset Tag QR</div>
-                    <div class="text-xs font-extrabold text-white font-mono">{{ $asset->unique_asset_id }}</div>
-                    <p class="text-[9px] text-slate-500">Scan for specifications</p>
+                    <div class="text-[10px] font-bold uppercase tracking-wide" style="color: #94a3b8 !important;">Asset Tag QR</div>
+                    <div class="text-xs font-extrabold font-mono" style="color: #ffffff !important;">{{ $asset->unique_asset_id }}</div>
+                    <p class="text-[9px]" style="color: #cbd5e1 !important;">Scan for specifications</p>
                 </div>
             </div>
         @endif
