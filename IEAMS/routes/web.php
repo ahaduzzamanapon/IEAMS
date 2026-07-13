@@ -262,7 +262,7 @@ Route::middleware(['auth'])->group(function () {
         \Illuminate\Support\Facades\Artisan::call('cache:clear');
         \Illuminate\Support\Facades\Artisan::call('optimize');
         return back()->with('success', 'Application optimized and all caches cleared successfully!');
-    })->name('system.clear-cache');
+    })->name('system.clear-cache-get');
 
     Route::get('/run-migrations', function () {
         try {
