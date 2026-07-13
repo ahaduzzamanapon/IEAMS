@@ -176,6 +176,9 @@
             <a href="{{ route('notifications.index') }}" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 {{ request()->routeIs('notifications.*') ? 'bg-indigo-500/10 text-indigo-400 border-l-4 border-indigo-500 font-semibold' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200' }}">
                 <span class="mr-3">🔔</span> System Notifications
             </a>
+            <a href="{{ route('system.lock') }}" class="flex items-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 {{ request()->routeIs('system.lock') ? 'bg-indigo-500/10 text-indigo-400 border-l-4 border-indigo-500 font-semibold' : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200' }}">
+                <span class="mr-3">🔒</span> Code Protection
+            </a>
             <div class="px-4 py-2">
                 <form action="{{ route('system.clear-cache') }}" method="POST" class="m-0">
                     @csrf

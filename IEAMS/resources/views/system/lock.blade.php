@@ -1,0 +1,87 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="max-w-4xl mx-auto space-y-8">
+    
+    <!-- Header -->
+    <div class="border-b border-slate-800 pb-4">
+        <h2 class="text-3xl font-extrabold text-white tracking-wider">🔒 System Source Code Lock</h2>
+        <p class="text-slate-400 text-sm mt-1">Manage local PHP source code protection and toggle hex-obfuscation mode.</p>
+    </div>
+
+    <!-- Feedback Message -->
+    @if(session('success'))
+        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Status Card -->
+        <div class="md:col-span-1 p-6 rounded-2xl bg-[#0E1325]/80 border border-slate-800/80 flex flex-col justify-between space-y-6">
+            <div>
+                <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Current Status</span>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span class="text-4xl font-extrabold text-white">{{ $status['status'] }}</span>
+                </div>
+                <p class="text-slate-400 text-xs mt-2">{{ $status['encrypted'] }} of {{ $status['total'] }} files currently obfuscated.</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs font-semibold text-slate-400">
+                    <span>Lock Level</span>
+                    <span>{{ $status['percentage'] }}%</span>
+                </div>
+                <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-indigo-500 to-pink-500 transition-all duration-500" style="width: {{ $status['percentage'] }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Card -->
+        <div class="md:col-span-2 p-6 rounded-2xl bg-[#0E1325]/80 border border-slate-800/80 space-y-6">
+            <h3 class="text-lg font-bold text-white uppercase tracking-wider border-b border-slate-850 pb-2">Lock Controls</h3>
+            
+            <p class="text-slate-300 text-sm leading-relaxed">
+                You can toggle the source code state of all core controllers and models. When locked, files on the server are compiled to hex strings inside <code>eval()</code> wrappers, rendering them unreadable to FTP/SSH viewers, while the application runs fully normally.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                @if($status['status'] !== 'Encrypted')
+                    <form action="{{ route('system.lock.encrypt') }}" method="POST" onsubmit="return confirm('WARNING: This will encrypt/obfuscate all controllers and models files on the server disk. The application will continue to run normally but the source code files will not be readable. Proceed?')">
+                        @csrf
+                        <button type="submit" class="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-rose-900/20 cursor-pointer">
+                            🔒 Lock / Encrypt Code
+                        </button>
+                    </form>
+                @endif
+
+                @if($status['status'] !== 'Decrypted')
+                    <form action="{{ route('system.lock.decrypt') }}" method="POST" onsubmit="return confirm('This will restore all encrypted controllers and models back to original clean PHP source code. Proceed?')">
+                        @csrf
+                        <button type="submit" class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-900/20 cursor-pointer">
+                            🔓 Refresh / Decrypt Code
+                        </button>
+                    </form>
+                @endif
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Warnings / Documentation Panel -->
+    <div class="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/10 space-y-4">
+        <h4 class="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
+            ⚠️ IMPORTANT OPERATIONAL NOTICE
+        </h4>
+        <ul class="list-disc list-inside text-xs text-slate-300 space-y-2 leading-relaxed">
+            <li><strong>Zero Extensions Required:</strong> This utility uses standard PHP native hex execution wrappers (<code>eval(hex2bin(...))</code>), meaning it works instantly on any basic shared hosting server.</li>
+            <li><strong>Safe Areas:</strong> The SystemLockController and standard Authentication controllers are automatically skipped from encryption to guarantee you can always log back in and unlock the source code anytime.</li>
+            <li><strong>Git Workflows:</strong> Ensure you run <strong>Decrypt / Refresh</strong> before modifying any code locally or pushing to Git, to avoid committing encrypted files into your version history.</li>
+        </ul>
+    </div>
+
+</div>
+@endsection

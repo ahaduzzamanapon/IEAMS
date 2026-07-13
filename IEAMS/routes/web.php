@@ -17,6 +17,7 @@ use App\Http\Controllers\FloorController;
 use App\Http\Controllers\ApartmentController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\SystemLockController;
 
 // Authentication routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -266,5 +267,10 @@ Route::middleware(['auth'])->group(function () {
             return '<h1>Migration Failed</h1><pre>' . $e->getMessage() . '</pre>';
         }
     });
+
+    // System Lock & Encryption Control
+    Route::get('/system-lock', [SystemLockController::class, 'index'])->name('system.lock');
+    Route::post('/system-lock/encrypt', [SystemLockController::class, 'encrypt'])->name('system.lock.encrypt');
+    Route::post('/system-lock/decrypt', [SystemLockController::class, 'decrypt'])->name('system.lock.decrypt');
 
 });
