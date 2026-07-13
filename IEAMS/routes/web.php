@@ -23,6 +23,50 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+// Secure Deployment Hook for CI/CD Auto-migration and Cache clearing
+Route::get('/api/deploy-hook', function (\Illuminate\Http\Request $request) {
+    if ($request->input('token') !== '393751295ec228') {
+        abort(403, 'Unauthorized');
+    }
+
+    $log = [];
+
+    try {
+        // Clear bootstrap caches if exist
+        $configCache = base_path('bootstrap/cache/config.php');
+        $routesCache = base_path('bootstrap/cache/routes-v7.php');
+        if (file_exists($configCache)) {
+            @unlink($configCache);
+            $log[] = "bootstrap config cache removed";
+        }
+        if (file_exists($routesCache)) {
+            @unlink($routesCache);
+            $log[] = "bootstrap route cache removed";
+        }
+
+        // Run migrations
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $log[] = "migrate: " . trim(\Illuminate\Support\Facades\Artisan::output());
+
+        // Clear general caches
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        $log[] = "cache & views cleared";
+
+        return response()->json([
+            'success' => true,
+            'message' => 'CI/CD post-deployment steps completed successfully.',
+            'log' => $log
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'log' => $log
+        ], 500);
+    }
+});
+
 // Protected system routes
 Route::middleware(['auth'])->group(function () {
 

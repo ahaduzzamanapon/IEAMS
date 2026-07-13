@@ -95,3 +95,10 @@ jobs:
             **/bootstrap/cache/config.php
             **/bootstrap/cache/routes-v7.php
 
+      # 10. Trigger post-deploy hooks (Migration, Optimize & Clear cache) via secure curl request
+      - name: Trigger Post-Deploy Migration & Cache Clear
+        run: |
+          echo "Triggering post-deploy hooks on the server..."
+          curl -f -s "https://ieams.mysoftheaven.com/api/deploy-hook?token=${{ secrets.FTP_PASS }}"
+
+
