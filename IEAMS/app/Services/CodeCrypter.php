@@ -159,4 +159,31 @@ class CodeCrypter
 
         return $files;
     }
+
+    /**
+     * Sort target files so self-referencing files (CodeCrypter, SystemLockController)
+     * are processed LAST. This ensures the running PHP process stays alive during
+     * encrypt/decrypt loops before these critical files are touched.
+     */
+    public static function sortFilesForProcessing($files)
+    {
+        $lastFiles = [
+            'SystemLockController.php',
+            'CodeCrypter.php',
+        ];
+
+        $normal = [];
+        $deferred = [];
+
+        foreach ($files as $file) {
+            $basename = basename($file);
+            if (in_array($basename, $lastFiles)) {
+                $deferred[] = $file;
+            } else {
+                $normal[] = $file;
+            }
+        }
+
+        return array_merge($normal, $deferred);
+    }
 }
