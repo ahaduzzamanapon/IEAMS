@@ -31,13 +31,21 @@ class SystemLockController extends Controller
 
         $files = CodeCrypter::getTargetFiles();
         $count = 0;
+        $logs = [];
+        $base = base_path() . DIRECTORY_SEPARATOR;
         foreach ($files as $file) {
+            $relativePath = str_replace($base, '', $file);
             if (CodeCrypter::encryptFile($file)) {
                 $count++;
+                $logs[] = "Encrypted: {$relativePath}";
+            } else {
+                $logs[] = "Skipped (Already encrypted or invalid): {$relativePath}";
             }
         }
 
-        return redirect()->route('system.lock')->with('success', "Successfully encrypted {$count} PHP source files!");
+        return redirect()->route('system.lock')
+            ->with('success', "Successfully encrypted {$count} PHP source files!")
+            ->with('logs', $logs);
     }
 
     /**
@@ -55,12 +63,20 @@ class SystemLockController extends Controller
 
         $files = CodeCrypter::getTargetFiles();
         $count = 0;
+        $logs = [];
+        $base = base_path() . DIRECTORY_SEPARATOR;
         foreach ($files as $file) {
+            $relativePath = str_replace($base, '', $file);
             if (CodeCrypter::decryptFile($file)) {
                 $count++;
+                $logs[] = "Decrypted/Refreshed: {$relativePath}";
+            } else {
+                $logs[] = "Skipped (Already decrypted): {$relativePath}";
             }
         }
 
-        return redirect()->route('system.lock')->with('success', "Successfully decrypted and refreshed {$count} PHP source files!");
+        return redirect()->route('system.lock')
+            ->with('success', "Successfully decrypted and refreshed {$count} PHP source files!")
+            ->with('logs', $logs);
     }
 }

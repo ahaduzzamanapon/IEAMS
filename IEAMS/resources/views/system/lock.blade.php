@@ -26,6 +26,27 @@
         </div>
     @endif
 
+    <!-- Encryption Log Console -->
+    @if(session('logs'))
+        <div class="p-6 rounded-2xl bg-[#080b12] border border-slate-800/80 space-y-3 shadow-xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Execution Log Output
+                </span>
+                <span class="text-[10px] text-slate-500 font-mono">Total Files Processed: {{ count(session('logs')) }}</span>
+            </div>
+            <div class="max-h-48 overflow-y-auto font-mono text-xs text-slate-300 space-y-1.5 p-2 bg-slate-950/80 rounded-xl scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+                @foreach(session('logs') as $log)
+                    <div class="flex items-start gap-2">
+                        <span class="text-slate-500 select-none">&gt;</span>
+                        <span class="{{ str_contains($log, 'Encrypted') || str_contains($log, 'Decrypted') ? 'text-emerald-400' : 'text-slate-500' }}">{{ $log }}</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         
         <!-- Status Card -->

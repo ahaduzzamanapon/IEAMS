@@ -88,32 +88,34 @@ class CodeCrypter
         ];
     }
 
-    /**
-     * Retrieve list of target files (Controllers and Models)
-     */
     public static function getTargetFiles()
     {
         $files = [];
         
-        // Target Controllers
-        $controllerPath = app_path('Http/Controllers');
-        if (file_exists($controllerPath)) {
-            $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($controllerPath));
+        // 1. Scan app/ directory recursively
+        $appPath = app_path();
+        if (file_exists($appPath)) {
+            $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($appPath));
             foreach ($iterator as $file) {
                 if ($file->isFile() && $file->getExtension() === 'php') {
-                    // Skip SystemLockController and Auth Controllers to prevent lockout
                     $filename = $file->getFilename();
-                    if ($filename !== 'SystemLockController.php' && !str_contains($file->getPathname(), 'Auth')) {
-                        $files[] = $file->getRealPath();
-                    }
+                    $pathname = $file->getPathname();
+                    
+                    // Exclusions to prevent lockout or bootstrap issues
+                    if ($filename === 'SystemLockController.php') continue;
+                    if ($filename === 'CodeCrypter.php') continue;
+                    if ($filename === 'AppServiceProvider.php') continue;
+                    if (str_contains($pathname, 'app' . DIRECTORY_SEPARATOR . 'Http' . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'Auth')) continue;
+                    
+                    $files[] = $file->getRealPath();
                 }
             }
         }
 
-        // Target Models
-        $modelPath = app_path('Models');
-        if (file_exists($modelPath)) {
-            $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($modelPath));
+        // 2. Scan routes/ directory recursively
+        $routesPath = base_path('routes');
+        if (file_exists($routesPath)) {
+            $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($routesPath));
             foreach ($iterator as $file) {
                 if ($file->isFile() && $file->getExtension() === 'php') {
                     $files[] = $file->getRealPath();
