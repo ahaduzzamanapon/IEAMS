@@ -264,21 +264,21 @@ Route::middleware(['auth'])->group(function () {
         return back()->with('success', 'Application optimized and all caches cleared successfully!');
     })->name('system.clear-cache');
 
-    Route::get('/run-migrations', function () {
-        try {
-            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-            $output = \Illuminate\Support\Facades\Artisan::output();
+});
 
-            // Seed if empty
-            if (\App\Models\User::count() === 0) {
-                \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-                $output .= "\n\nSeeding successful!";
-            }
+Route::get('/run-migrations', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
+        $output = \Illuminate\Support\Facades\Artisan::output();
 
-            return '<h1>Migration & Seeding Success</h1><pre>' . $output . '</pre><p><a href="/">Go back to Dashboard</a></p>';
-        } catch (\Exception $e) {
-            return '<h1>Migration Failed</h1><pre>' . $e->getMessage() . '</pre>';
+        // Seed if empty
+        if (\App\Models\User::count() === 0) {
+            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+            $output .= "\n\nSeeding successful!";
         }
-    });
 
+        return '<h1>Migration & Seeding Success</h1><pre>' . $output . '</pre><p><a href="/">Go back to Dashboard</a></p>';
+    } catch (\Exception $e) {
+        return '<h1>Migration Failed</h1><pre>' . $e->getMessage() . '</pre>';
+    }
 });
