@@ -57,28 +57,7 @@ jobs:
       - name: Build Frontend Assets
         run: npm run build
 
-      # 8. Prepare .env for production
-      - name: Prepare Production .env
-        run: |
-          cp .env.example .env
-          sed -i "s|APP_ENV=.*|APP_ENV=production|" .env
-          sed -i "s|APP_DEBUG=.*|APP_DEBUG=false|" .env
-          sed -i "s|APP_KEY=.*|APP_KEY=${{ secrets.APP_KEY }}|" .env
-          sed -i "s|APP_URL=.*|APP_URL=${{ secrets.APP_URL }}|" .env
-          sed -i "s|DB_HOST=.*|DB_HOST=${{ secrets.DB_HOST }}|" .env
-          sed -i "s|DB_PORT=.*|DB_PORT=${{ secrets.DB_PORT }}|" .env
-          sed -i "s|DB_DATABASE=.*|DB_DATABASE=${{ secrets.DB_DATABASE }}|" .env
-          sed -i "s|DB_USERNAME=.*|DB_USERNAME=${{ secrets.DB_USERNAME }}|" .env
-          sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.DB_PASSWORD }}|" .env
-
-      # 9. Optimize Laravel for production
-      - name: Optimize Laravel
-        run: |
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-
-      # 10. Set storage directory permissions (create writable dirs)
+      # 8. Set storage directory permissions (create writable dirs)
       - name: Prepare Storage Directories
         run: |
           mkdir -p storage/framework/cache
@@ -87,8 +66,8 @@ jobs:
           mkdir -p storage/logs
           chmod -R 775 storage bootstrap/cache
 
-      # 11. Deploy via FTP (credentials from GitHub Secrets ONLY)
-      # local-dir points to the built project directory
+      # 9. Deploy via FTP
+      # server-dir is hardcoded to root './', and .env is excluded from upload
       - name: Deploy to Production Server via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -98,12 +77,13 @@ jobs:
           port: 21
           protocol: ftp
           local-dir: ./IEAMS/
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          server-dir: ./
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
             **/tests/**
+            **/.env
             **/.env.example
             **/.editorconfig
             **/.phpunit*
