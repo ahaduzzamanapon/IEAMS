@@ -214,4 +214,13 @@ Route::middleware(['auth'])->group(function () {
         return back()->with('success', 'Application optimized and all caches cleared successfully!');
     })->name('system.clear-cache');
 
+    Route::get('/run-migrations', function () {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            return '<h1>Migration Success</h1><pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre><p><a href="/">Go back to Dashboard</a></p>';
+        } catch (\Exception $e) {
+            return '<h1>Migration Failed</h1><pre>' . $e->getMessage() . '</pre>';
+        }
+    });
+
 });
