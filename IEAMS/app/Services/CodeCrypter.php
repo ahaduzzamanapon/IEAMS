@@ -115,9 +115,10 @@ class CodeCrypter
         }
 
         $percentage = round(($encryptedCount / count($files)) * 100);
+        $isLocked = self::hasStoredKey();
 
         return [
-            'status' => $encryptedCount === count($files) ? 'Encrypted' : ($encryptedCount === 0 ? 'Decrypted' : 'Partially Encrypted'),
+            'status' => $isLocked ? 'Encrypted' : 'Decrypted',
             'percentage' => $percentage,
             'encrypted' => $encryptedCount,
             'total' => count($files)
