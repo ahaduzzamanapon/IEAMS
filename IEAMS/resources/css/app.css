@@ -1,0 +1,224 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+    --color-indigo-600: #0e76bc;
+    --color-indigo-500: #0e76bc;
+    --color-indigo-400: #0e76bc;
+}
+
+/* Custom Light-Theme CSS Overrides for NHA & Mysoft Heaven Theme */
+
+body {
+    background-color: #F8FAFC !important;
+    color: #0F172A !important;
+}
+
+aside {
+    background-color: #FFFFFF !important;
+    border-right: 1px solid #E2E8F0 !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+}
+
+header {
+    background-color: #FFFFFF !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+}
+
+/* Card and Container Backgrounds */
+.bg-\[\#0E1325\]\/80, 
+.bg-\[\#0E1325\],
+.bg-\[\#0E131F\],
+.bg-\[\#0E132F\]\/80,
+.bg-\[\#0E132F\],
+.bg-\[\#0B0F19\]\/80,
+.bg-\[\#0B0F19\]\/60,
+.bg-\[\#0B0F19\] {
+    background-color: #FFFFFF !important;
+}
+
+/* Inner elements / Input fields backgrounds */
+.bg-\[\#080B11\],
+.bg-\[\#05070C\],
+.bg-\[\#0B0F19\]\/80,
+.bg-\[\#0B0F19\]\/60 {
+    background-color: #F8FAFC !important;
+}
+
+/* Forms and Inputs */
+input, select, textarea {
+    background-color: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    color: #0F172A !important;
+}
+input::placeholder, textarea::placeholder {
+    color: #94A3B8 !important;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: #0e76bc !important;
+    box-shadow: 0 0 0 1px #0e76bc !important;
+}
+
+/* Borders */
+.border-slate-800\/60,
+.border-slate-800\/80,
+.border-slate-800,
+.border-slate-850,
+.border-slate-900,
+.border-slate-700\/80,
+.border-slate-700 {
+    border-color: #E2E8F0 !important;
+}
+
+/* Dark utility backgrounds mapped to light-slate for buttons and badges */
+.bg-slate-800,
+.bg-slate-900,
+.bg-slate-850,
+.bg-slate-750,
+.bg-slate-950 {
+    background-color: #F1F5F9 !important;
+    color: #334155 !important;
+    border: 1px solid #E2E8F0 !important;
+}
+.bg-slate-800:hover,
+.bg-slate-900:hover,
+.bg-slate-750:hover,
+.bg-slate-850:hover {
+    background-color: #E2E8F0 !important;
+    color: #0F172A !important;
+}
+
+/* Text Colors: Target headings and text divs, leaving buttons white */
+span.text-white,
+p.text-white,
+div.text-white,
+h1.text-white,
+h2.text-white,
+h3.text-white,
+h4.text-white,
+th.text-white,
+td.text-white,
+.text-slate-100 {
+    color: #0F172A !important;
+}
+.text-slate-200,
+.text-slate-300 {
+    color: #334155 !important;
+}
+.text-slate-400 {
+    color: #475569 !important;
+}
+.text-slate-500 {
+    color: #64748B !important;
+}
+
+/* Sidebar navigation links hover/active */
+aside nav a {
+    color: #475569 !important;
+}
+aside nav a:hover {
+    background-color: #F1F5F9 !important;
+    color: #0F172A !important;
+}
+aside nav a.bg-indigo-500\/10 {
+    background-color: rgba(14, 118, 188, 0.08) !important;
+    color: #0e76bc !important;
+    border-left-color: #0e76bc !important;
+}
+
+/* Primary/Danger/Success buttons maintain high contrast white text */
+a.bg-indigo-600,
+button.bg-indigo-600,
+button.bg-rose-600,
+a.bg-rose-600,
+.bg-indigo-600,
+.bg-indigo-500,
+.bg-rose-600,
+.bg-emerald-600 {
+    color: #FFFFFF !important;
+    white-space: nowrap !important;
+}
+
+/* Soft Amber/Edit Button override in light theme */
+.bg-amber-600\/10,
+.bg-amber-600\/20 {
+    background-color: rgba(217, 119, 6, 0.12) !important;
+    color: #b45309 !important; /* High contrast dark amber text */
+}
+.bg-amber-600\/10:hover,
+.bg-amber-600\/20:hover {
+    background-color: #d97706 !important;
+    color: #FFFFFF !important;
+}
+
+/* Soft Rose/Delete Button override in light theme */
+.bg-rose-600\/10,
+.bg-rose-600\/20 {
+    background-color: rgba(225, 29, 72, 0.12) !important;
+    color: #be123c !important; /* High contrast dark rose/red text */
+}
+.bg-rose-600\/10:hover,
+.bg-rose-600\/20:hover {
+    background-color: #e11d48 !important;
+    color: #FFFFFF !important;
+}
+
+/* Ensure all action links and default buttons do not wrap */
+button,
+input[type="submit"],
+a.px-2,
+a.px-3,
+a.px-4,
+a.px-6,
+.bg-slate-800,
+.bg-slate-900,
+.bg-slate-750,
+.bg-indigo-605,
+.bg-indigo-600\/10 {
+    white-space: nowrap !important;
+}
+
+/* Interactive elements and Badges */
+.bg-indigo-600 {
+    background-color: #0e76bc !important;
+}
+.bg-indigo-600:hover {
+    background-color: #0b5d94 !important;
+}
+.bg-indigo-500\/10 {
+    background-color: rgba(14, 118, 188, 0.08) !important;
+    color: #0e76bc !important;
+}
+.text-indigo-400 {
+    color: #0e76bc !important;
+}
+.bg-indigo-600\/10 {
+    background-color: rgba(14, 118, 188, 0.08) !important;
+    color: #0e76bc !important;
+}
+.hover\:bg-indigo-600:hover {
+    background-color: #0e76bc !important;
+    color: #FFFFFF !important;
+}
+
+/* Table header override */
+.bg-slate-900\/60 {
+    background-color: #F1F5F9 !important;
+}
+.divide-slate-800\/60 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #E2E8F0 !important;
+}
+
+/* Scrollbars overrides */
+::-webkit-scrollbar-track {
+    background: #F8FAFC !important;
+}
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1 !important;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8 !important;
+}
