@@ -19,43 +19,110 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Override SQLite grammar to support older SQLite versions (< 3.26) on shared hosting
+        // Override SQLite grammar to support older SQLite versions (< 3.16) on shared hosting
         \Illuminate\Database\Connection::resolverFor('sqlite', function ($connection, $database, $prefix, $config) {
-            $conn = new \Illuminate\Database\SQLiteConnection($connection, $database, $prefix, $config);
-            
-            $grammar = new class($conn) extends \Illuminate\Database\Schema\Grammars\SQLiteGrammar {
-                public function __construct(\Illuminate\Database\Connection $connection)
-                {
-                    parent::__construct($connection);
-                }
-
-                public function compileColumns($schema, $table)
-                {
-                    return sprintf(
-                        'select name, type, not "notnull" as "nullable", dflt_value as "default", pk as "primary", 0 as "extra" '
-                        .'from pragma_table_info(%s) order by cid asc',
-                        $this->quoteString($table)
-                    );
-                }
-
-                public function compileIndexes($schema, $table)
-                {
-                    return sprintf(
-                        'select \'primary\' as name, group_concat(col) as columns, 1 as "unique", 1 as "primary" '
-                        .'from (select name as col from pragma_table_info(%s) where pk > 0 order by pk, cid) group by name '
-                        .'union select name, group_concat(col) as columns, "unique", origin = \'pk\' as "primary" '
-                        .'from (select il.*, ii.name as col from pragma_index_list(%s, %s) il, pragma_index_info(il.name, %s) ii order by il.seq, ii.seqno) '
-                        .'group by name, "unique", "primary"',
-                        $table = $this->quoteString($table),
-                        $table,
-                        $schema = $this->quoteString($schema ?? 'main'),
-                        $schema
-                    );
-                }
-            };
-            
-            $conn->setSchemaGrammar($grammar);
-            return $conn;
+            return new CustomSQLiteConnection($connection, $database, $prefix, $config);
         });
+    }
+}
+
+// Custom Schema Builder for older SQLite versions on shared hosting
+class CustomSQLiteBuilder extends \Illuminate\Database\Schema\SQLiteBuilder
+{
+    public function getColumns($table)
+    {
+        [$schema, $table] = $this->parseSchemaAndTable($table);
+        $table = $this->connection->getTablePrefix().$table;
+
+        // Fetch column info directly using PRAGMA (works on ALL SQLite versions!)
+        $results = $this->connection->selectFromWriteConnection("PRAGMA table_info(\"{$table}\")");
+
+        $columns = [];
+        foreach ($results as $row) {
+            $row = (array) $row;
+            $typeName = strtolower(explode('(', $row['type'])[0]);
+            $columns[] = [
+                'name' => $row['name'],
+                'type' => strtolower($row['type']),
+                'type_name' => $typeName,
+                'collation' => null,
+                'nullable' => !((bool) $row['notnull']),
+                'default' => $row['dflt_value'],
+                'auto_increment' => false, // fallback
+                'comment' => null,
+                'generation' => null
+            ];
+        }
+
+        return $this->connection->getPostProcessor()->processColumns(
+            $columns,
+            $this->connection->scalar($this->grammar->compileSqlCreateStatement($schema, $table))
+        );
+    }
+
+    public function getIndexes($table)
+    {
+        [$schema, $table] = $this->parseSchemaAndTable($table);
+        $table = $this->connection->getTablePrefix().$table;
+
+        $indexes = [];
+
+        // Check for primary key by checking columns pk status
+        $tableInfo = $this->connection->selectFromWriteConnection("PRAGMA table_info(\"{$table}\")");
+        $pkColumns = [];
+        foreach ($tableInfo as $col) {
+            $col = (array) $col;
+            if ($col['pk'] > 0) {
+                $pkColumns[$col['pk']] = $col['name'];
+            }
+        }
+
+        if (!empty($pkColumns)) {
+            ksort($pkColumns);
+            $indexes[] = [
+                'name' => 'primary',
+                'columns' => array_values($pkColumns),
+                'type' => 'primary',
+                'unique' => true,
+                'primary' => true,
+            ];
+        }
+
+        // Fetch index list
+        $indexList = $this->connection->selectFromWriteConnection("PRAGMA index_list(\"{$table}\")");
+        foreach ($indexList as $idx) {
+            $idx = (array) $idx;
+            $idxName = $idx['name'];
+
+            // Get index columns info
+            $idxInfo = $this->connection->selectFromWriteConnection("PRAGMA index_info(\"{$idxName}\")");
+            $cols = [];
+            foreach ($idxInfo as $idxCol) {
+                $idxCol = (array) $idxCol;
+                $cols[] = $idxCol['name'];
+            }
+
+            $indexes[] = [
+                'name' => $idxName,
+                'columns' => $cols,
+                'type' => $idx['unique'] ? 'unique' : 'index',
+                'unique' => (bool)$idx['unique'],
+                'primary' => false,
+            ];
+        }
+
+        return $this->connection->getPostProcessor()->processIndexes($indexes);
+    }
+}
+
+class CustomSQLiteConnection extends \Illuminate\Database\SQLiteConnection
+{
+    public function getSchemaBuilder()
+    {
+        if (is_null($this->schemaGrammar)) {
+            $this->useDefaultSchemaGrammar();
+        }
+
+        return new CustomSQLiteBuilder($this);
     }
 }
